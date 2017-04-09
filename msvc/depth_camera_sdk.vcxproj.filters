@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{a2e577b4-ff9d-4441-8224-2902a887a757}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="os">
+      <UniqueIdentifier>{91684511-77b2-452d-ba88-a89bf6623f28}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\os\std_event.cpp">
+      <Filter>os</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\depth_camera_cmd.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\depth_camera_uvc.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\uvc_interface.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cmd_interface.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\os\cmd_interface_win.cpp">
+      <Filter>os</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\os\uvc_interface_direct_show.cpp">
+      <Filter>os</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\os\std_event.h">
+      <Filter>os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\depth_camera_cmd.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\depth_camera_uvc.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\uvc_interface.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\cmd_interface.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\os\cmd_interface_win.h">
+      <Filter>os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\os\uvc_interface_direct_show.h">
+      <Filter>os</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

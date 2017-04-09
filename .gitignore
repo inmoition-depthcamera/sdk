@@ -27,3 +27,8 @@
 *.exe
 *.out
 *.app
+
+.vs
+.vscode
+/msvc/Debug
+/msvc/*.user
