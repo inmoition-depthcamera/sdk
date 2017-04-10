@@ -2,7 +2,7 @@
 #ifndef __CMD_INTERFACE_WIN_H__
 #define __CMD_INTERFACE_WIN_H__
 
-#include "../cmd_interface.h"
+#include "cmd_interface.h"
 #include <windows.h>
 
 class CmdInterfaceWin:public CmdInterface

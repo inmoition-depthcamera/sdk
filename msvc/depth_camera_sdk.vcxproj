@@ -19,23 +19,27 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\cmd_interface.cpp" />
     <ClCompile Include="..\source\depth_camera_cmd.cpp" />
     <ClCompile Include="..\source\depth_camera_uvc.cpp" />
+    <ClCompile Include="..\source\filter\depth_camera_filter.cpp" />
+    <ClCompile Include="..\source\filter\matrix.cpp" />
+    <ClCompile Include="..\source\os\cmd_interface.cpp" />
     <ClCompile Include="..\source\os\cmd_interface_win.cpp" />
     <ClCompile Include="..\source\os\std_event.cpp" />
+    <ClCompile Include="..\source\os\uvc_interface.cpp" />
     <ClCompile Include="..\source\os\uvc_interface_direct_show.cpp" />
-    <ClCompile Include="..\source\uvc_interface.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\cmd_interface.h" />
     <ClInclude Include="..\source\depth_camera_cmd.h" />
     <ClInclude Include="..\source\depth_camera_uvc.h" />
+    <ClInclude Include="..\source\filter\depth_camera_filter.h" />
+    <ClInclude Include="..\source\filter\matrix.h" />
+    <ClInclude Include="..\source\os\cmd_interface.h" />
     <ClInclude Include="..\source\os\cmd_interface_win.h" />
     <ClInclude Include="..\source\os\std_event.h" />
+    <ClInclude Include="..\source\os\uvc_interface.h" />
     <ClInclude Include="..\source\os\uvc_interface_direct_show.h" />
-    <ClInclude Include="..\source\uvc_interface.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -100,7 +104,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>kernel32.lib;user32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>strmbase.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -129,7 +133,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>strmbase.lib;kernel32.lib;user32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

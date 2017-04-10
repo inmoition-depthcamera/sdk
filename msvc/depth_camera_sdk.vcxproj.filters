@@ -7,6 +7,9 @@
     <Filter Include="os">
       <UniqueIdentifier>{91684511-77b2-452d-ba88-a89bf6623f28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="filter">
+      <UniqueIdentifier>{94dd267e-ac08-47e1-8c2f-4727328d3c3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\os\std_event.cpp">
@@ -18,12 +21,6 @@
     <ClCompile Include="..\source\depth_camera_uvc.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\uvc_interface.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\cmd_interface.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\os\cmd_interface_win.cpp">
       <Filter>os</Filter>
     </ClCompile>
@@ -32,6 +29,18 @@
     </ClCompile>
     <ClCompile Include="..\source\os\uvc_interface_direct_show.cpp">
       <Filter>os</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\os\cmd_interface.cpp">
+      <Filter>os</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\os\uvc_interface.cpp">
+      <Filter>os</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\filter\depth_camera_filter.cpp">
+      <Filter>filter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\filter\matrix.cpp">
+      <Filter>filter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -44,17 +53,23 @@
     <ClInclude Include="..\source\depth_camera_uvc.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\uvc_interface.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\cmd_interface.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\os\cmd_interface_win.h">
       <Filter>os</Filter>
     </ClInclude>
     <ClInclude Include="..\source\os\uvc_interface_direct_show.h">
       <Filter>os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\os\cmd_interface.h">
+      <Filter>os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\os\uvc_interface.h">
+      <Filter>os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\filter\depth_camera_filter.h">
+      <Filter>filter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\filter\matrix.h">
+      <Filter>filter</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

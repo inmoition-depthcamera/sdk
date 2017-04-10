@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <mutex>
+
 
 using namespace std;
 
@@ -33,30 +35,46 @@ public:
     DepthCameraUvcPort();
     ~DepthCameraUvcPort();
 
-    static int32_t GetDepthCameraList(vector<string> &camera_list);
+	virtual bool Open(std::string &camera_name) override;
+	virtual bool Close() override;
+
+    int32_t GetDepthCameraList(vector<string> &camera_list);
     
-    bool Open(string camera_name);
-    bool Close();
-    bool IsOpened();
+    void SetDepthFrameCallback(std::function<void(const uint16_t * phase, const uint16_t * amplitude, 
+		const uint8_t * ambient, const uint8_t * flags, void *param)>, void *param);
 
-    void SetDepthFrameCallback(std::function<void(uint16_t * phase, uint16_t * amplitude, uint8_t * ambient, uint8_t * flags, void *param)>, void *param);
-    void RemoveDepthFrameCallback();
-
-    bool HasNewFrame();
     bool GetDepthFrame(uint16_t * phase, uint16_t * amplitude, uint8_t * ambient, uint8_t * flags);
 
-    static int32_t DepthToPointCloud(uint16_t *phase, float *point_clould);
-    static int32_t DepthToPointCloud(uint16_t *phase, float *point_clould, 
-            uint16_t *amplitude = NULL, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
-    static int32_t DepthToPointCloud(uint16_t *phase, float *point_clould, float *point_clould_color,  
-            uint16_t *amplitude = NULL, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
-
-    static void PhaseDenoise(uint16_t *phase, uint16_t *amplitude, uint8_t *flags, uint16_t* new_phase, int amp_thr);
+    int32_t DepthToPointCloud(const uint16_t *phase, float *point_clould);
+    int32_t DepthToPointCloud(const uint16_t *phase, float *point_clould,
+		const uint16_t *amplitude = NULL, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
+	
+	virtual int32_t GetWidth() { return mWidth; };
+	virtual int32_t GetHeight() { return mHeight; };
 
 private:
+	std::function<void(const uint16_t *, const uint16_t *, const uint8_t *, const uint8_t *, void *)> mOnDepthFrameCallBack;
+	void *mOnDepthFrameCallBackParam;
 
-	std::function<void(uint16_t * phase, uint16_t * amplitude, uint8_t * ambient, uint8_t * flags, void *param)> mOnFrame;
-	void *mOnFrameParam;
+	static void OnUvcFrame(double sample_time, uint8_t *frame_buf, uint32_t frame_buf_len, void *param);
+
+	void SplitUvcFrameToDepthFrame(uint8_t *frame_buf, uint32_t frame_buf_len);
+
+	uint16_t* mDepthBuffer;
+	uint16_t* mAmplitudeBuffer;
+	uint8_t*  mAmbintBuffer;
+	uint8_t*  mFlagBuffer;
+
+	uint32_t mWidth;
+	uint32_t mHeight;
+
+	float mWFocal, mHFocal;
+
+	std::mutex mMutex;
+
+	float *mD2PTable;
+
+	bool mAlreadyPrepared;
 };
 
 #endif

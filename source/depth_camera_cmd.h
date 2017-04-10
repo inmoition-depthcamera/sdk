@@ -9,18 +9,15 @@
 using namespace std;
 
 #ifdef WIN32
-#include "os/cmd_interface_win.h"
+	#include "os/cmd_interface_win.h"
+	#define CMD_INTERFACE_DRIVER CmdInterfaceWin
 #else
-#include "os/cmd_interface_linux.h"
+	#include "os/cmd_interface_linux.h"
+	#define CMD_INTERFACE_DRIVER CmdInterfaceLinux
 #endif
 
 
-
-#ifdef WIN32
-class DepthCameraCmdPort : public CmdInterfaceWin
-#else
-class DepthCameraCmdPort : public CmdInterfaceLinux
-#endif
+class DepthCameraCmdPort : public CMD_INTERFACE_DRIVER
 {
 public:
     DepthCameraCmdPort();
@@ -44,6 +41,7 @@ public:
 	bool RestoreFactorySettings();
 	bool GetSystemStatus(char * status_buf, int32_t status_buf_len);
 	bool GetCameraConfig(char * config_buf, int32_t config_buf_len);
+	bool EnableHdr(uint8_t value);
 
     // Low level interface to read & write reg directly
 	bool ReadReg(uint8_t dev_addr, uint8_t reg_addr, uint32_t* reg_value);
