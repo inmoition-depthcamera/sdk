@@ -11,13 +11,11 @@ CmdInterface::CmdInterface()
 
 	ResponseBuffer = new char[MAX_ACK_BUF_LEN];
 	ResponseBufferLen = 0;
+	mRxThread = NULL;
 }
 
 CmdInterface::~CmdInterface()
 {
-	if (mRxThread.joinable())
-		mRxThread.join();
-
 	delete[] ResponseBuffer;
 }
 
@@ -42,12 +40,14 @@ int32_t CmdInterface::SendCmdAndWaitResponse(const char * cmd_buf, int32_t cmd_l
 		uint32_t writed = 0;
 		bool res = WriteToIo((const uint8_t *)cmd_buf, cmd_len, &writed);
 		if (res) {
-			if (mAckEvent.wait(timeout) == 0) {
+			std::unique_lock <std::mutex> lck(mRxEventMutex);
+			if (mRxEvent.wait_for(lck, std::chrono::milliseconds(timeout)) != std::cv_status::timeout) {
 				int32_t cplen = -1;
 				mMutex.lock();				
 				if (ResponseBufferLen > 0 && ack_buffer) {
 					cplen = ack_buf_len > ResponseBufferLen ? ResponseBufferLen : ack_buf_len;
 					memcpy(ack_buffer, ResponseBuffer, cplen);
+					ack_buffer[cplen] = 0;
 				}
 				mMutex.unlock();
 				return cplen;
@@ -70,7 +70,7 @@ void CmdInterface::mRxThreadProc(void * param)
 	char * rx_buf = new char[MAX_ACK_BUF_LEN + 1];
 	uint32_t rx_offset = 0;
 
-	while (cmd_if->mRxThreadExitFlag.load()) {
+	while (!cmd_if->mRxThreadExitFlag.load()) {
 		uint32_t readed = 0;
 		bool res = cmd_if->ReadFromIO((uint8_t *)rx_buf + rx_offset, MAX_ACK_BUF_LEN - rx_offset, &readed);
 		if (res) {
@@ -83,7 +83,7 @@ void CmdInterface::mRxThreadProc(void * param)
 			// check for "/>"
 			for (uint32_t i = 1; i < rx_offset; i++) {
 				if (rx_buf[i - 1] == '/' && rx_buf[i] == '>') {
-					str1 = rx_buf + i + 1;
+					str1 = rx_buf + i + 2;
 					break;
 				}
 			}
@@ -96,16 +96,17 @@ void CmdInterface::mRxThreadProc(void * param)
 					str1--;
 
 				cmd_if->mMutex.lock();
-				cmd_if->ResponseBufferLen = str1 - rx_buf;
+				cmd_if->ResponseBufferLen = str1 - rx_buf + 1;
 				memcpy(cmd_if->ResponseBuffer, rx_buf, cmd_if->ResponseBufferLen);
 				cmd_if->mMutex.unlock();
 
 				// copy reset to head
 				rx_offset = rx_offset - (str2 - rx_buf);
-				memcpy(rx_buf, str2, rx_offset);
+				if(rx_offset)
+					memcpy(rx_buf, str2, rx_offset);
 
 				// notify ack event
-				cmd_if->mAckEvent.set();
+				cmd_if->mRxEvent.notify_all();
 			}else if (rx_offset >= MAX_ACK_BUF_LEN) {
 				rx_offset = 0;
 			}

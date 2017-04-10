@@ -12,9 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\os\std_event.cpp">
-      <Filter>os</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\depth_camera_cmd.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -44,9 +41,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\os\std_event.h">
-      <Filter>os</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\depth_camera_cmd.h">
       <Filter>source</Filter>
     </ClInclude>

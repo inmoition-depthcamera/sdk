@@ -5,10 +5,9 @@
 #include <inttypes.h>
 #include <atomic>
 #include <mutex>
+#include <vector>
 #include <functional>
 
-
-#include "std_event.h"
 
 using namespace std;
 
@@ -18,8 +17,9 @@ public:
 	CmdInterface();
 	~CmdInterface();
 
-	virtual int Open(string port_name) = 0;
-	virtual int Close() = 0;
+	virtual bool Open(string &port_name) = 0;
+	virtual bool Close() = 0;
+	virtual bool GetUvcRelatedCmdPort(string &uvc_port_name, string &cmd_port_name) = 0;
 
 	bool IsOpened();
 
@@ -33,14 +33,16 @@ protected:
 
 	std::function<void(unsigned char *, int, void *)> mRxCallBack;
     void *mRxCallBackParam;
-    std::thread mRxThread;
+    std::thread *mRxThread;
     static void mRxThreadProc(void *param);
 	std::atomic<bool> mRxThreadExitFlag;
 
 
 	std::atomic<bool> mIsOpened;
 	
-	std_event mAckEvent;
+	std::condition_variable mRxEvent;
+	std::mutex mRxEventMutex;
+
 	std::mutex mMutex;
 
 	char *ResponseBuffer;

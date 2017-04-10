@@ -22,10 +22,7 @@ class DepthCameraCmdPort : public CMD_INTERFACE_DRIVER
 public:
     DepthCameraCmdPort();
     ~DepthCameraCmdPort();
-
-    // Port Open&Close 
-    static int32_t GetDepthCmdPortList(vector<string> *cmd_port_list);
-
+	
     // Firmware Upgrade
     bool StartUpgrade(string firmware_file_name);
     bool StopUpgrade();

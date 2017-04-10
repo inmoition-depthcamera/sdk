@@ -25,7 +25,6 @@
     <ClCompile Include="..\source\filter\matrix.cpp" />
     <ClCompile Include="..\source\os\cmd_interface.cpp" />
     <ClCompile Include="..\source\os\cmd_interface_win.cpp" />
-    <ClCompile Include="..\source\os\std_event.cpp" />
     <ClCompile Include="..\source\os\uvc_interface.cpp" />
     <ClCompile Include="..\source\os\uvc_interface_direct_show.cpp" />
     <ClCompile Include="main.cpp" />
@@ -37,7 +36,6 @@
     <ClInclude Include="..\source\filter\matrix.h" />
     <ClInclude Include="..\source\os\cmd_interface.h" />
     <ClInclude Include="..\source\os\cmd_interface_win.h" />
-    <ClInclude Include="..\source\os\std_event.h" />
     <ClInclude Include="..\source\os\uvc_interface.h" />
     <ClInclude Include="..\source\os\uvc_interface_direct_show.h" />
   </ItemGroup>
