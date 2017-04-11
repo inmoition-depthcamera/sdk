@@ -147,7 +147,7 @@ Matrix Matrix::sort(vector<int>& id, int option){
 	case 1:{
 			   //on rows
 			   Matrix res(rows, cols);
-			   if (id.size() != rows){
+			   if (id.size() != (size_t)rows){
 				   cerr << "Matrix dimensions must agree." << endl;
 				   exit(-1);
 			   }
@@ -203,7 +203,6 @@ Matrix Matrix::invert(){
 	}
 	Matrix res(rows, rows);
 	int actualsize = rows;
-	int maxsize = rows;
 	vector<vector<REAL>> data_t = data;
 	for (int i = 1; i<actualsize; i++)
 		data_t[0][i] /= data_t[0][0];
@@ -352,7 +351,7 @@ unsigned short  Convolution(Matrix *A, Matrix *B, Matrix *C, Matrix *D)
 		}
 	}
 	SumD /= SumF;
-	return (unsigned short(SumD + 0.5));
+	return (unsigned short)(SumD + 0.5);
 }
 
 void ROI55(Matrix *A, Matrix *B, int x, int y, int w, int h)

@@ -12,7 +12,7 @@ UvcInterface::~UvcInterface()
 {
 }
 
-void UvcInterface::SetUvcFrameCallBack(std::function<void(double sample_time, uint8_t*frame_buf, uint32_t frame_buf_len, void*param)> cb, void * param)
+void UvcInterface::SetUvcFrameCallBack(std::function<void(double sample_time, uint8_t*frame_buf, int32_t frame_buf_len, void*param)> cb, void * param)
 {
 	mFrameCallBack = cb;
 	mFrameCallBackParam = param;

@@ -1,4 +1,5 @@
 #include "depth_camera_cmd.h"
+#include "string.h"
 
 DepthCameraCmdPort::DepthCameraCmdPort()
 {

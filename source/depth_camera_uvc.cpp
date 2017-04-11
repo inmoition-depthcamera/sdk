@@ -1,8 +1,11 @@
 #include "depth_camera_uvc.h"
+#include "math.h"
+#include "string.h"
 
 DepthCameraUvcPort::DepthCameraUvcPort()
 {
 	SetUvcFrameCallBack(OnUvcFrame, this);
+
 	mWidth = mHeight = 0;
 
 	mDepthBuffer = NULL;
@@ -181,7 +184,7 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t * phase, float * po
 	return totalPoint;
 }
 
-void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, uint32_t frame_buf_len, void * param)
+void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, int32_t frame_buf_len, void * param)
 {
 	DepthCameraUvcPort * dc = (DepthCameraUvcPort *)param;
 
@@ -189,7 +192,7 @@ void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, uin
 		dc->SplitUvcFrameToDepthFrame(frame_buf, frame_buf_len);
 }
 
-void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, uint32_t frame_buf_len)
+void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t frame_buf_len)
 {
 	int32_t w = mWidth;
 	int32_t h = mHeight;

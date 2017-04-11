@@ -7,7 +7,9 @@
 #include <mutex>
 #include <vector>
 #include <functional>
-
+#include <string>
+#include <condition_variable>
+#include <string.h>
 
 using namespace std;
 

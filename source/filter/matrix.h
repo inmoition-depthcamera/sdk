@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <windows.h>
+#include <inttypes.h>
 #include <iostream>
 
 using namespace std;
@@ -162,4 +162,4 @@ void MatNumMul(Matrix *A, float B, Matrix *C);
 unsigned short  Convolution(Matrix *A, Matrix *B, Matrix *C, Matrix *D);
 void ROI55(Matrix *A, Matrix *B, int x, int y, int w, int h);
 
-#endif;
+#endif

@@ -24,11 +24,11 @@ public:
 	bool IsOpened() { return mIsOpened.load(); }
 	bool HasNewFrame() { return mHasNewFrame; }
 	// This function should been called before open
-	void SetUvcFrameCallBack(std::function<void(double sample_time, uint8_t *frame_buf, uint32_t frame_buf_len, void * param)> cb, void *param);
+	void SetUvcFrameCallBack(std::function<void(double sample_time, uint8_t *frame_buf, int32_t frame_buf_len, void * param)> cb, void *param);
 
 protected:
 	std::atomic<bool> mIsOpened;
-	std::function<void(double, uint8_t *, uint32_t, void *)> mFrameCallBack;
+	std::function<void(double, uint8_t *, int32_t, void *)> mFrameCallBack;
 	void * mFrameCallBackParam;
 
 	int32_t mUvcWidth;

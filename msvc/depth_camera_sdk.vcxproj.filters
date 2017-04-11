@@ -39,9 +39,6 @@
     <ClCompile Include="..\source\filter\matrix.cpp">
       <Filter>filter</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\os\cmd_interface_linux.cpp">
-      <Filter>os</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\depth_camera_cmd.h">
@@ -68,8 +65,8 @@
     <ClInclude Include="..\source\filter\matrix.h">
       <Filter>filter</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\os\cmd_interface_linux.h">
-      <Filter>os</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\CMakeLists.txt" />
   </ItemGroup>
 </Project>

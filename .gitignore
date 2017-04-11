@@ -32,3 +32,4 @@
 .vscode
 /msvc/Debug
 /msvc/*.user
+build/

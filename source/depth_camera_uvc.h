@@ -56,17 +56,17 @@ private:
 	std::function<void(const uint16_t *, const uint16_t *, const uint8_t *, const uint8_t *, void *)> mOnDepthFrameCallBack;
 	void *mOnDepthFrameCallBackParam;
 
-	static void OnUvcFrame(double sample_time, uint8_t *frame_buf, uint32_t frame_buf_len, void *param);
+	static void OnUvcFrame(double sample_time, uint8_t *frame_buf, int32_t frame_buf_len, void *param);
 
-	void SplitUvcFrameToDepthFrame(uint8_t *frame_buf, uint32_t frame_buf_len);
+	void SplitUvcFrameToDepthFrame(uint8_t *frame_buf, int32_t frame_buf_len);
 
 	uint16_t* mDepthBuffer;
 	uint16_t* mAmplitudeBuffer;
 	uint8_t*  mAmbintBuffer;
 	uint8_t*  mFlagBuffer;
 
-	uint32_t mWidth;
-	uint32_t mHeight;
+	int32_t mWidth;
+	int32_t mHeight;
 
 	float mWFocal, mHFocal;
 

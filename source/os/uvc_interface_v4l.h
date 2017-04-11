@@ -1,27 +1,21 @@
 
-#ifndef __WIN_SERIAL_PORT_H__
-#define __WIN_SERIAL_PORT_H__
+#ifndef __UVC_INTERFACE_V4L_H__
+#define __UVC_INTERFACE_V4L_H__
 
-#include "../cmd_interface.h"
-#include <windows.h>
+#include "uvc_interface.h"
 
-class CmdInterfaceWin:public CmdInterface
+class UvcInterfaceV4L:public UvcInterface
 {
 public:
-	CmdInterfaceWin();
-	~CmdInterfaceWin();
+	UvcInterfaceV4L();
+	~UvcInterfaceV4L();
 
-	// Inherited via CmdInterface
-	virtual int Open(string port_name) override;
-	virtual int Close() override;
+	// Inherited via UvcInterface
+	virtual bool GetUvcCameraList(std::vector<std::string>& camera_list, const char * filter) override;
 
-protected:
+	virtual bool Open(std::string & camera_name) override;
 
-	HANDLE mComHandle;
-
-	// Inherited via CmdInterface
-	virtual bool ReadFromIO(uint8_t * rx_buf, uint32_t rx_buf_len, uint32_t * rx_len) override;
-	virtual bool WriteToIo(const uint8_t * tx_buf, uint32_t tx_buf_len, uint32_t * tx_len) override;
+	virtual bool Close() override;
 
 };
 

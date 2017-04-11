@@ -4,22 +4,15 @@
 
 #include "iostream"
 
-void main()
+int main(int argc, char **argv)
 {
 	DepthCameraCmdPort cmd_port;
 	DepthCameraUvcPort uvc_port;
 
 	std::vector<std::string> camera_list;
-	std::vector<std::string> cmd_list;
+	string cmd_port_name = "/dev/ttyACM0";
 
 	uvc_port.GetDepthCameraList(camera_list);
-
-	if (camera_list.size() > 0) {
-		string cmd_port_name;
-		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
-		cmd_port.Open(cmd_port_name);
-		uvc_port.Open(camera_list[0]);
-	}
 	
 	char status[4096];
 	cmd_port.GetSystemStatus(status, 1024);
@@ -30,4 +23,6 @@ void main()
 
 	char ch;
 	std::cin >> ch;
+
+	return 0;
 }
