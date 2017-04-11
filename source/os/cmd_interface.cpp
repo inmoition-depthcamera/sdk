@@ -69,12 +69,10 @@ void CmdInterface::mRxThreadProc(void * param)
 	CmdInterface *cmd_if = (CmdInterface *)param;
 	char * rx_buf = new char[MAX_ACK_BUF_LEN + 1];
 	uint32_t rx_offset = 0;
-
 	while (!cmd_if->mRxThreadExitFlag.load()) {
 		uint32_t readed = 0;
 		bool res = cmd_if->ReadFromIO((uint8_t *)rx_buf + rx_offset, MAX_ACK_BUF_LEN - rx_offset, &readed);
-		if (res) {
-			
+		if (res) {			
 			if (cmd_if->mRxCallBack)
 				cmd_if->mRxCallBack((uint8_t *)rx_buf + rx_offset, readed, cmd_if->mRxCallBackParam);
 
@@ -90,21 +88,17 @@ void CmdInterface::mRxThreadProc(void * param)
 
 			if (str1 != NULL) {
 				char *str2 = str1;
-
-				// find the first line before "/>"
 				while (str1 > rx_buf && *str1 != '\n')
 					str1--;
-
 				cmd_if->mMutex.lock();
 				cmd_if->ResponseBufferLen = str1 - rx_buf + 1;
 				memcpy(cmd_if->ResponseBuffer, rx_buf, cmd_if->ResponseBufferLen);
 				cmd_if->mMutex.unlock();
-
+				
 				// copy reset to head
 				rx_offset = rx_offset - (str2 - rx_buf);
 				if(rx_offset)
 					memcpy(rx_buf, str2, rx_offset);
-
 				// notify ack event
 				cmd_if->mRxEvent.notify_all();
 			}else if (rx_offset >= MAX_ACK_BUF_LEN) {

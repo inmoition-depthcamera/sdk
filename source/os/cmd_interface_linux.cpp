@@ -19,22 +19,22 @@ CmdInterfaceLinux::~CmdInterfaceLinux()
 
 bool CmdInterfaceLinux::Open(string & port_name)
 {
-	int flags = (O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC | O_SYNC);
+	int flags = (O_RDWR | O_NOCTTY | O_CLOEXEC | O_SYNC);
 	mComHandle = open(port_name.c_str(), flags);
 	if (-1 == mComHandle) {
-		return -1;
+		return false;
 	}
 
 	if (-1 == fcntl(mComHandle, F_SETFD, FD_CLOEXEC)) {
 		Close();
-		return -1;
+		return false;
 	}
 
 	// get port options
 	struct termios options;
 	if (-1 == tcgetattr(mComHandle, &options)) {
 		Close();
-		return -1;
+		return false;
 	}
 
 	// Get port configuration for modification
@@ -62,6 +62,10 @@ bool CmdInterfaceLinux::Open(string & port_name)
 	}
 
 	mIsOpened = true;
+
+	mRxThreadExitFlag = false;
+	mRxThread = new std::thread(mRxThreadProc, this);
+	
 	return true;
 }
 
@@ -87,20 +91,22 @@ bool CmdInterfaceLinux::GetUvcRelatedCmdPort(string & uvc_port_name, string & cm
 
 bool CmdInterfaceLinux::ReadFromIO(uint8_t * rx_buf, uint32_t rx_buf_len, uint32_t * rx_len)
 {
+	int32_t len = -1;
 	if (IsOpened()) {
-		int32_t len = read(mComHandle, rx_buf, rx_buf_len);
-		if (rx_len)
+		len = read(mComHandle, rx_buf, rx_buf_len);
+		if(len != -1 && rx_len)
 			*rx_len = len;
 	}	
-	return true;
+	return len == -1 ? false : true;
 }
 
 bool CmdInterfaceLinux::WriteToIo(const uint8_t * tx_buf, uint32_t tx_buf_len, uint32_t * tx_len)
 {
+	int32_t len = -1;
 	if (IsOpened()) {
-		int32_t len = write(mComHandle, tx_buf, tx_buf_len);
-		if (tx_len)
+		len = write(mComHandle, tx_buf, tx_buf_len);
+		if(len != -1 && tx_len)
 			*tx_len = len;
 	}
-	return false;
+	return len == -1 ? false : true;
 }

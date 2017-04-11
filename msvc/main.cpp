@@ -13,12 +13,16 @@ int main(int argc, char **argv)
 	string cmd_port_name = "/dev/ttyACM0";
 
 	uvc_port.GetDepthCameraList(camera_list);
-	
-	char status[4096];
-	cmd_port.GetSystemStatus(status, 1024);
-	cout << status << endl;
+	if(cmd_port.Open(cmd_port_name))
+		cout << "cmd port: " << cmd_port_name << " Open Successed!" << endl;
+	else {
+		cout << "cmd port: " << cmd_port_name << " Open Failed!" << endl;
+		return -1;
+	}
 
-	cmd_port.GetCameraConfig(status, 4096);
+	char status[4096];
+
+	cmd_port.GetSystemStatus(status, 1024);
 	cout << status << endl;
 
 	char ch;
