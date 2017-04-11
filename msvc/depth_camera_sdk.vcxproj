@@ -24,6 +24,7 @@
     <ClCompile Include="..\source\filter\depth_camera_filter.cpp" />
     <ClCompile Include="..\source\filter\matrix.cpp" />
     <ClCompile Include="..\source\os\cmd_interface.cpp" />
+    <ClCompile Include="..\source\os\cmd_interface_linux.cpp" />
     <ClCompile Include="..\source\os\cmd_interface_win.cpp" />
     <ClCompile Include="..\source\os\uvc_interface.cpp" />
     <ClCompile Include="..\source\os\uvc_interface_direct_show.cpp" />
@@ -35,6 +36,7 @@
     <ClInclude Include="..\source\filter\depth_camera_filter.h" />
     <ClInclude Include="..\source\filter\matrix.h" />
     <ClInclude Include="..\source\os\cmd_interface.h" />
+    <ClInclude Include="..\source\os\cmd_interface_linux.h" />
     <ClInclude Include="..\source\os\cmd_interface_win.h" />
     <ClInclude Include="..\source\os\uvc_interface.h" />
     <ClInclude Include="..\source\os\uvc_interface_direct_show.h" />
