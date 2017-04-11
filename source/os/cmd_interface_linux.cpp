@@ -9,6 +9,10 @@
 #include <string.h>
 #include <memory.h>
 
+#ifdef USE_UDEV
+	#include <libudev.h>
+#endif
+
 CmdInterfaceLinux::CmdInterfaceLinux()
 {
 }
@@ -86,7 +90,42 @@ bool CmdInterfaceLinux::Close()
 
 bool CmdInterfaceLinux::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_port_name)
 {
+#ifdef USE_UDEV
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices, *dev_list_entry;
+	struct udev_device *dev;
+	udev = udev_new();
+	if (!udev) {
+		printf("Can't create udev\n");
+		exit(1);
+	}
+	string device_name = uvc_port_name.substr(uvc_port_name.rfind("__") + 2);
+	enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(enumerate, "tty");
+	udev_enumerate_scan_devices(enumerate);
+	devices = udev_enumerate_get_list_entry(enumerate);
+	udev_list_entry_foreach(dev_list_entry, devices) {
+		const char *path;
+		path = udev_list_entry_get_name(dev_list_entry);
+		dev = udev_device_new_from_syspath(udev, path);
+		string dev_path = string(udev_device_get_devnode(dev));
+		dev = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
+		if(dev){
+			if(strstr(udev_device_get_sysattr_value(dev,"product"), device_name.c_str())){
+				cmd_port_name = dev_path;
+				break;
+			}
+			udev_device_unref(dev);
+		}else
+			break;	
+	}
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
+	return true;
+#else
 	return false;
+#endif
 }
 
 bool CmdInterfaceLinux::ReadFromIO(uint8_t * rx_buf, uint32_t rx_buf_len, uint32_t * rx_len)

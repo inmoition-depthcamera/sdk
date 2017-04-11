@@ -36,8 +36,8 @@ public:
 	bool SwitchMirror();
 	bool SetBinning(uint8_t rows, uint8_t columns);
 	bool RestoreFactorySettings();
-	bool GetSystemStatus(char * status_buf, int32_t status_buf_len);
-	bool GetCameraConfig(char * config_buf, int32_t config_buf_len);
+	bool GetSystemStatus(string &status_str);
+	bool GetCameraConfig(string &config_str);
 	bool EnableHdr(uint8_t value);
 
     // Low level interface to read & write reg directly

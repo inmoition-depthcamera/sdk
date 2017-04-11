@@ -22,7 +22,7 @@ public:
 	inline int32_t GetHeight() { return mUvcHeight; }
 	
 	bool IsOpened() { return mIsOpened.load(); }
-	bool HasNewFrame() { return mHasNewFrame; }
+	bool HasNewFrame() { bool ret = mHasNewFrame; mHasNewFrame = false; return ret; }
 	// This function should been called before open
 	void SetUvcFrameCallBack(std::function<void(double sample_time, uint8_t *frame_buf, int32_t frame_buf_len, void * param)> cb, void *param);
 

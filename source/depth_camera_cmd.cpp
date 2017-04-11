@@ -75,7 +75,7 @@ bool DepthCameraCmdPort::RestoreFactorySettings()
 	return SendCmdAndWaitResult(cmd, len, "Ok");
 }
 
-bool DepthCameraCmdPort::GetSystemStatus(char * status_buf, int32_t status_buf_len)
+bool DepthCameraCmdPort::GetSystemStatus(string &status_str)
 {
 	char response_buf[2048];
 	char cmd[32];
@@ -86,12 +86,8 @@ bool DepthCameraCmdPort::GetSystemStatus(char * status_buf, int32_t status_buf_l
 		char * str = strstr((char*)response_buf, "show");
 		char * endstr = strstr((char*)response_buf, "\r\nINMOTION");
 		if(endstr) *endstr = 0;
-		if (str != NULL && len > 0 && status_buf){
-			str += len;
-			len = endstr ? (int)(endstr - str) : strlen(str);
-			len = len > (status_buf_len - 1) ? status_buf_len - 1 : len;
-			memcpy(status_buf, str, len);
-			status_buf[len] = 0;
+		if (str){
+			status_str = str + len;
 			return true;
 		}
 	}
@@ -99,7 +95,7 @@ bool DepthCameraCmdPort::GetSystemStatus(char * status_buf, int32_t status_buf_l
 	return false;
 }
 
-bool DepthCameraCmdPort::GetCameraConfig(char * config_buf, int32_t config_buf_len)
+bool DepthCameraCmdPort::GetCameraConfig(string &config_str)
 {
 	char response_buf[2048];
 	char cmd[32];
@@ -110,14 +106,8 @@ bool DepthCameraCmdPort::GetCameraConfig(char * config_buf, int32_t config_buf_l
 		char * str = strstr((char*)response_buf, "Send start:\r\n<");
 		char * endstr = strstr((char*)response_buf, ">\r\nSend end.");
 		*endstr = 0;
-
-		if (str != NULL && len > 0 && config_buf)
-		{
-			str += len;
-			len = (int)(endstr - str);
-			len = len > (config_buf_len - 1) ? config_buf_len - 1 : len;
-			memcpy(config_buf, str, len);
-			config_buf[len] = 0;
+		if (str){
+			config_str = str + len;
 			return true;
 		}
 	}
