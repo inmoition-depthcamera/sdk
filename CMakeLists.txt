@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(PROJECT_NAME inmotion_dc_sdk)
+SET(PROJECT_NAME inmotion_dc_sdk_test)
 
 # define project will set CMAKE_CXX_FLAGS to NULL
 PROJECT (${PROJECT_NAME})
@@ -32,12 +32,10 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     INCLUDE_DIRECTORIES(${SRCDIR})
     ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
 
-    
-
     TARGET_LINK_LIBRARIES(${PROJECT_NAME} pthread)
 
     IF(USE_LIBUDEV)
-        add_definitions(-DUSE_UDEV)
+        ADD_DEFINITIONS(-DUSE_UDEV)
         TARGET_LINK_LIBRARIES(${PROJECT_NAME} udev)
     ENDIF()
 
@@ -61,7 +59,7 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
 
     IF(USE_LIBUVC)
         SET(SRC_LIST SRC_LIST ";${SRCDIR}/os/uvc_interface_libuvc.cpp")
-        add_definitions(-DUVC_DRIVER_LIBUVC)
+        ADD_DEFINITIONS(-DUVC_DRIVER_LIBUVC)
     ENDIF()
 
     INCLUDE_DIRECTORIES(${SRCDIR})

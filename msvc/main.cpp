@@ -2,10 +2,10 @@
 #include "../source/depth_camera_cmd.h"
 #include "../source/depth_camera_uvc.h"
 
-#include "iostream"
-
+#include "iostream
 int main(int argc, char **argv)
 {
+	print_devs();
 	DepthCameraCmdPort cmd_port;
 	DepthCameraUvcPort uvc_port;
 
