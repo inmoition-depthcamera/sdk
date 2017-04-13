@@ -14,6 +14,13 @@ int main(int argc, char **argv)
 
 	uvc_port.GetDepthCameraList(camera_list);
 
+	for(auto name : camera_list){
+		cout << name << endl;
+	}
+
+    uvc_port.Open(camera_list[0]);
+	return 0;
+
 	if(camera_list.size() > 0){
 		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
 		cout << "uvc related cmd port:" << cmd_port_name << endl;

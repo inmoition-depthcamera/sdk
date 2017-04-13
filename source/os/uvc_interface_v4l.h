@@ -27,7 +27,7 @@ private:
 	std::atomic<bool> mReadFrameThreadExitFlag;
 	static void ReadFrameThreadProc(UvcInterfaceV4L *param);
 
-	int32_t fd;
+	int32_t mFd;
 	std::string mDeviceName;
 	void *mMemBuffers[NB_BUFFER];
 

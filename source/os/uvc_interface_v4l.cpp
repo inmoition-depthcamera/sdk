@@ -69,7 +69,7 @@ bool UvcInterfaceV4L::Open(std::string & camera_name)
 	return true;
 
 error:
-	close(fd);
+	close(mFd);
 	fd = -1;
 	return false;
 }
@@ -104,7 +104,7 @@ bool UvcInterfaceV4L::InitV4L()
 	struct v4l2_format fmt;
 	struct v4l2_requestbuffers rb;
 	struct v4l2_buffer buf;
-	if ((fd = open(mDeviceName.c_str(), O_RDWR)) == -1) {
+	if ((mFd = open(mDeviceName.c_str(), O_RDWR)) == -1) {
 		perror("ERROR opening V4L interface \n");
 		exit(1);
 	}

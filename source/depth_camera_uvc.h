@@ -14,22 +14,22 @@ using namespace std;
 #if defined WIN32
 	#if defined UVC_DRIVER_LIBUVC
 		#include "os/uvc_interface_libuvc.h"
-		#define UVC_INTERFACE_DRVIER UvcInterfaceLibUvc
+		#define UVC_INTERFACE_DRIVER UvcInterfaceLibUvc
 	#else // default uvc driver in windows
 		#include "os/uvc_interface_direct_show.h"
-		#define UVC_INTERFACE_DRVIER UvcInterfaceDirectShow
+		#define UVC_INTERFACE_DRIVER UvcInterfaceDirectShow
 	#endif
 #else
 	#ifdef UVC_DRIVER_LIBUVC
 		#include "os/uvc_interface_libuvc.h"
-		#define UVC_INTERFACE_DRVIER UvcInterfaceLibUvc
+		#define UVC_INTERFACE_DRIVER UvcInterfaceLibUvc
 	#else // default uvc driver in linux
 		#include "os/uvc_interface_v4l.h"
-		#define UVC_INTERFACE_DRVIER UvcInterfaceV4L
+		#define UVC_INTERFACE_DRIVER UvcInterfaceV4L
 	#endif
 #endif 
 
-class DepthCameraUvcPort : public UVC_INTERFACE_DRVIER
+class DepthCameraUvcPort : public UVC_INTERFACE_DRIVER
 {
 public:
     DepthCameraUvcPort();

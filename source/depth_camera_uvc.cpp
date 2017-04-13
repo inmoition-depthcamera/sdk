@@ -39,7 +39,7 @@ DepthCameraUvcPort::~DepthCameraUvcPort()
 
 bool DepthCameraUvcPort::Open(std::string &camera_name)
 {
-	bool res = UVC_INTERFACE_DRVIER::Open(camera_name);
+	bool res = UVC_INTERFACE_DRIVER::Open(camera_name);
 
 	if (res) {		
 		int32_t w = mUvcWidth / 2;
@@ -101,7 +101,7 @@ bool DepthCameraUvcPort::Open(std::string &camera_name)
 
 bool DepthCameraUvcPort::Close()
 {
-	bool res = UVC_INTERFACE_DRVIER::Close();
+	bool res = UVC_INTERFACE_DRIVER::Close();
 
 	mAlreadyPrepared = false;
 	
@@ -110,7 +110,7 @@ bool DepthCameraUvcPort::Close()
 
 int32_t DepthCameraUvcPort::GetDepthCameraList(vector<string>& camera_list)
 {
-	return UVC_INTERFACE_DRVIER::GetUvcCameraList(camera_list, "INMOTION");
+	return UVC_INTERFACE_DRIVER::GetUvcCameraList(camera_list, "INMOTION");
 }
 
 void DepthCameraUvcPort::SetDepthFrameCallback(std::function<void(const uint16_t* phase, const uint16_t*amplitude, 
