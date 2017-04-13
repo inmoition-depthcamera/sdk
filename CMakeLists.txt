@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(PROJECT_NAME inmotion_dc_sdk)
+SET(PROJECT_NAME inmotion_dc_sdk_test)
 
 # define project will set CMAKE_CXX_FLAGS to NULL
 PROJECT (${PROJECT_NAME})
@@ -35,7 +35,7 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     TARGET_LINK_LIBRARIES(${PROJECT_NAME} pthread)
 
     IF(USE_LIBUDEV)
-        add_definitions(-DUSE_UDEV)
+        ADD_DEFINITIONS(-DUSE_UDEV)
         TARGET_LINK_LIBRARIES(${PROJECT_NAME} udev)
     ENDIF()
 
