@@ -1,6 +1,6 @@
 
-#include "../source/depth_camera_cmd.h"
-#include "../source/depth_camera_uvc.h"
+#include "depth_camera_cmd.h"
+#include "depth_camera_uvc.h"
 
 #include "iostream"
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
     if(camera_list.size() > 0){
 
-		// get uvc relate cmd port(ttyacmx)
+		// get uvc relate cmd port(ttyACMx)
 		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
 
 		// should open cmd port first
