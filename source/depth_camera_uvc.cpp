@@ -6,12 +6,12 @@ DepthCameraUvcPort::DepthCameraUvcPort()
 {
 	SetUvcFrameCallBack(OnUvcFrame, this);
 
-	mWidth = mHeight = 0;
+	mDepthFrame.w = mDepthFrame.h = 0;
 
-	mDepthBuffer = NULL;
-	mAmplitudeBuffer = NULL;
-	mAmbintBuffer = NULL;
-	mFlagBuffer = NULL;
+	mDepthFrame.phase = NULL;
+	mDepthFrame.amplitude = NULL;
+	mDepthFrame.ambient = NULL;
+	mDepthFrame.flags = NULL;
 
 	mOnDepthFrameCallBack = NULL;
 	mOnDepthFrameCallBackParam = NULL;
@@ -23,18 +23,17 @@ DepthCameraUvcPort::DepthCameraUvcPort()
 
 DepthCameraUvcPort::~DepthCameraUvcPort()
 {
-	if (mDepthBuffer)     delete[] mDepthBuffer;
-	if (mAmplitudeBuffer) delete[] mAmplitudeBuffer;
-	if (mAmbintBuffer)    delete[] mAmbintBuffer;
-	if (mFlagBuffer)      delete[] mFlagBuffer;
+	if (mDepthFrame.phase)     delete[] mDepthFrame.phase;
+	if (mDepthFrame.amplitude) delete[] mDepthFrame.amplitude;
+	if (mDepthFrame.ambient)    delete[] mDepthFrame.ambient;
+	if (mDepthFrame.flags)      delete[] mDepthFrame.flags;
 
-	mDepthBuffer = NULL;
-	mAmplitudeBuffer = NULL;
-	mAmbintBuffer = NULL;
-	mFlagBuffer = NULL;
+	mDepthFrame.phase = NULL;
+	mDepthFrame.amplitude = NULL;
+	mDepthFrame.ambient = NULL;
+	mDepthFrame.flags = NULL;
 
 	if (mD2PTable) delete[] mD2PTable;
-		
 }
 
 bool DepthCameraUvcPort::Open(std::string &camera_name)
@@ -50,22 +49,23 @@ bool DepthCameraUvcPort::Open(std::string &camera_name)
 		case 120: w = 80; break;
 		}
 
-		if (mHeight != h || w != mHeight) {
+		if (mDepthFrame.w != w || mDepthFrame.h != h) {
 
-			mWidth = w;
-			mHeight = h;
+			mDepthFrame.w = w;
+			mDepthFrame.h = h;
 
-			if (mDepthBuffer)     delete[] mDepthBuffer;
-			if (mAmplitudeBuffer) delete[] mAmplitudeBuffer;
-			if (mAmbintBuffer)    delete[] mAmbintBuffer;
-			if (mFlagBuffer)      delete[] mFlagBuffer;
-			if (mD2PTable)        delete[] mD2PTable;
+			if (mDepthFrame.phase)     delete[] mDepthFrame.phase;
+			if (mDepthFrame.amplitude) delete[] mDepthFrame.amplitude;
+			if (mDepthFrame.ambient)   delete[] mDepthFrame.ambient;
+			if (mDepthFrame.flags)     delete[] mDepthFrame.flags;
+			if (mD2PTable)             delete[] mD2PTable;
 
-			mDepthBuffer     = new uint16_t[mWidth * mHeight];
-			mAmplitudeBuffer = new uint16_t[mWidth * mHeight];
-			mAmbintBuffer    = new uint8_t[mWidth * mHeight];
-			mFlagBuffer      = new uint8_t[mWidth * mHeight];
-			mD2PTable        = new float[mWidth * mHeight];
+			mDepthFrame.phase     = new uint16_t[mDepthFrame.w * mDepthFrame.h];
+			mDepthFrame.amplitude = new uint16_t[mDepthFrame.w * mDepthFrame.h];
+			mDepthFrame.ambient   = new uint8_t[mDepthFrame.w * mDepthFrame.h];
+			mDepthFrame.flags     = new uint8_t[mDepthFrame.w * mDepthFrame.h];
+
+			mD2PTable = new float[mDepthFrame.w * mDepthFrame.h];
 		}
 
 		if (camera_name.find("IDC8060S") != string::npos){
@@ -89,7 +89,6 @@ bool DepthCameraUvcPort::Open(std::string &camera_name)
 		float k1 = 1 / mWFocal;
 		float k2 = 1 / mHFocal;
 		float *p = mD2PTable;
-
 		for (int32_t y = 0; y < h; y++)
 			for (int32_t x = 0; x < w; x++)
 				*p++ = (float)(1.0 / sqrt(1 + k1 * k1 * (w / 2 - x) * (w / 2 - x) + k2 * k2 * (h / 2 - y) * (h / 2 - y)));
@@ -108,36 +107,35 @@ bool DepthCameraUvcPort::Close()
 	return res;
 }
 
-int32_t DepthCameraUvcPort::GetDepthCameraList(vector<string>& camera_list)
+bool DepthCameraUvcPort::GetDepthCameraList(vector<string>& camera_list)
 {
 	return UVC_INTERFACE_DRIVER::GetUvcCameraList(camera_list, "INMOTION");
 }
 
-void DepthCameraUvcPort::SetDepthFrameCallback(std::function<void(const uint16_t* phase, const uint16_t*amplitude, 
-	const uint8_t*ambient, const uint8_t*flags, void*param)>cb, void * param)
+void DepthCameraUvcPort::SetDepthFrameCallback(std::function<void(const DepthFrame*, void*)>cb, void * param)
 {
 	mOnDepthFrameCallBack = cb;
 	mOnDepthFrameCallBackParam = param;
 }
 
-bool DepthCameraUvcPort::GetDepthFrame(uint16_t * phase, uint16_t * amplitude, uint8_t * ambient, uint8_t * flags)
+bool DepthCameraUvcPort::GetDepthFrame(DepthFrame *df)
 {
-	int32_t size = mWidth * mHeight;
-	mMutex.lock();
-	if (phase)     memcpy(phase,     mDepthBuffer,     size * sizeof(uint16_t));
-	if (amplitude) memcpy(amplitude, mAmplitudeBuffer, size * sizeof(uint16_t));
-	if (ambient)   memcpy(ambient,   mAmbintBuffer,    size * sizeof(uint8_t));
-	if (flags)     memcpy(flags,     mFlagBuffer,      size * sizeof(uint8_t));
-	mMutex.unlock();
+	int32_t size = mDepthFrame.w * mDepthFrame.h;
+	std::lock_guard<std::mutex> lck(mMutex);
+	if (df->phase)     memcpy(df->phase,     mDepthFrame.phase,     size * sizeof(uint16_t));
+	if (df->amplitude) memcpy(df->amplitude, mDepthFrame.amplitude, size * sizeof(uint16_t));
+	if (df->ambient)   memcpy(df->ambient,   mDepthFrame.ambient,    size * sizeof(uint8_t));
+	if (df->flags)     memcpy(df->flags,     mDepthFrame.flags,      size * sizeof(uint8_t));
+
 	return true;
 }
 
-int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t * phase, float * point_clould)
+int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould)
 {
-	const uint16_t* p_buf = phase;
+	const uint16_t* p_buf = df->phase;
 
-	int32_t w = mWidth;
-	int32_t h = mHeight;
+	int32_t w = mDepthFrame.w;
+	int32_t h = mDepthFrame.h;
 	float *table = mD2PTable;
 
 	int32_t totalPoint = 0;
@@ -156,13 +154,13 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t * phase, float * po
 	return totalPoint;
 }
 
-int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t * phase, float * point_clould, const uint16_t * amplitude, uint16_t phaseMax, uint16_t amplitudeMin)
+int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould, uint16_t phaseMax, uint16_t amplitudeMin)
 {
-	const uint16_t* p_buf = phase;
-	const uint16_t* a_buf = amplitude;
+	const uint16_t* p_buf = df->phase;
+	const uint16_t* a_buf = df->amplitude;
 	
-	int32_t w = mWidth;
-	int32_t h = mHeight;
+	int32_t w = mDepthFrame.w;
+	int32_t h = mDepthFrame.h;
 	float *table = mD2PTable;
 
 	int32_t totalPoint = 0;
@@ -194,12 +192,12 @@ void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, int
 
 void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t frame_buf_len)
 {
-	int32_t w = mWidth;
-	int32_t h = mHeight;
-	uint16_t* phase_buffer = mDepthBuffer;
-	uint16_t* amplitude_buffer = mAmplitudeBuffer;
-	uint8_t*  ambient_buffer = mAmbintBuffer;
-	uint8_t*  flags_buffer = mFlagBuffer;
+	int32_t w = mDepthFrame.w;
+	int32_t h = mDepthFrame.h;
+	uint16_t* phase_buffer = mDepthFrame.phase;
+	uint16_t* amplitude_buffer = mDepthFrame.amplitude;
+	uint8_t*  ambient_buffer = mDepthFrame.ambient;
+	uint8_t*  flags_buffer = mDepthFrame.flags;
 	
 	int32_t total_size = mUvcHeight * mUvcWidth * 2;
 	if (frame_buf_len != total_size)
@@ -242,5 +240,5 @@ void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t 
 	mMutex.unlock();
 
 	if (mOnDepthFrameCallBack)
-		mOnDepthFrameCallBack(mDepthBuffer, mAmplitudeBuffer, mAmbintBuffer, mFlagBuffer, mOnDepthFrameCallBackParam);
+		mOnDepthFrameCallBack(&mDepthFrame, mOnDepthFrameCallBackParam);
 }

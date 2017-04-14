@@ -1,62 +1,63 @@
-#include "depth_camera_filter.h"
+#include "denoise_filter.h"
 
 
-const int DepthCameraFilter::dx1[8] = { -1,-1,-1,0,0,1,1,1 };
-const int DepthCameraFilter::dy1[8] = { -1,0,1,-1,1,-1,0,1 };
-const int DepthCameraFilter::dx2[16] = { -2,-2,-2,-2,-2,-1,-1,0,0,1,1,2,2,2,2,2 };
-const int DepthCameraFilter::dy2[16] = { -2,-1,0,1,2,-2,2,-2,2,-2,2,-2,-1,0,1,2 };
+const int DenoiseFilter::dx1[8] = { -1,-1,-1,0,0,1,1,1 };
+const int DenoiseFilter::dy1[8] = { -1,0,1,-1,1,-1,0,1 };
+const int DenoiseFilter::dx2[16] = { -2,-2,-2,-2,-2,-1,-1,0,0,1,1,2,2,2,2,2 };
+const int DenoiseFilter::dy2[16] = { -2,-1,0,1,2,-2,2,-2,2,-2,2,-2,-1,0,1,2 };
 
-float DepthCameraFilter::Big[25] =
+float DenoiseFilter::Big[25] =
 { 0.15f,0.2f,0.15f,0.2f,0.15f,
 0.2f,0.4f,0.4f,0.4f,0.2f,
 0.25f,0.4f,0.5f,0.4f,0.25f,
 0.2f,0.4f,0.4f,0.4f,0.2f,
 0.15f,0.2f,0.15f,0.2f,0.15f };
 
-float DepthCameraFilter::Sma[25] =
+float DenoiseFilter::Sma[25] =
 { 0.05f,0.15f,0.15f,0.15f,0.05f,
 0.1f,0.2f,0.25f,0.2f,0.1f,
 0.15f,0.25f,0.7f,0.25f,0.15f,
 0.1f,0.2f,0.25f,0.2f,0.1f,
 0.05f,0.15f,0.15f,0.15f,0.05f };
 
-float DepthCameraFilter::Dis2D[25] =
+float DenoiseFilter::Dis2D[25] =
 { 1.0f / 2.828427125f,1.0f / 2.236067977f,1.0f / 2.0f,1.0f / 2.236067977f,1.0f / 2.828427125f,
 1.0f / 2.236067977f,1.0f / 1.414213562f,1.0f / 1.0f,1.0f / 1.414213562f,1.0f / 2.236067977f,
 1.0f / 2.0f,1.0f / 1.0f, 2.5f,1.0f / 1.0f,1.0f / 2.0f,
 1.0f / 2.236067977f,1.0f / 1.414213562f,1.0f / 1.0f,1.0f / 1.414213562f,1.0f / 2.236067977f,
 1.0f / 2.828427125f,1.0f / 2.236067977f,1.0f / 2.0f,1.0f / 2.236067977f,1.0f / 2.828427125f };
 
-float DepthCameraFilter::One[25] =
+float DenoiseFilter::One[25] =
 { 1.0f,1.0f,1.0f,1.0f,1.0f,
 1.0f,1.0f,1.0f,1.0f,1.0f,
 1.0f,1.0f,0.0f,1.0f,1.0f,
 1.0f,1.0f,1.0f,1.0f,1.0f,
 1.0f,1.0f,1.0f,1.0f,1.0f };
 
-Matrix DepthCameraFilter::OneMat(5, 5, One);
-Matrix DepthCameraFilter::BigMat(5, 5, Big);
-Matrix DepthCameraFilter::SmaMat(5, 5, Sma);
-Matrix DepthCameraFilter::Dis2DMat(5, 5, Dis2D);
-Matrix DepthCameraFilter::Relation(5, 5);
-Matrix DepthCameraFilter::DepthROI(5, 5);
-Matrix DepthCameraFilter::AmpMatROI(5, 5);
-Matrix DepthCameraFilter::AmpRatio;
+Matrix DenoiseFilter::OneMat(5, 5, One);
+Matrix DenoiseFilter::BigMat(5, 5, Big);
+Matrix DenoiseFilter::SmaMat(5, 5, Sma);
+Matrix DenoiseFilter::Dis2DMat(5, 5, Dis2D);
+Matrix DenoiseFilter::Relation(5, 5);
+Matrix DenoiseFilter::DepthROI(5, 5);
+Matrix DenoiseFilter::AmpMatROI(5, 5);
+Matrix DenoiseFilter::AmpRatio;
 
-DepthCameraFilter::DepthCameraFilter()
+DenoiseFilter::DenoiseFilter()
 {
 }
 
-DepthCameraFilter::~DepthCameraFilter()
+DenoiseFilter::~DenoiseFilter()
 {
 }
 
-void DepthCameraFilter::InitDepthDenoise(int w, int h)
+void DenoiseFilter::Init(int w, int h)
 {
 	AmpMat.SetMatrix(w, h, NULL);
 }
 
-void DepthCameraFilter::Depth_Denoise(int w, int h, unsigned short * phase, unsigned short * amplitude, unsigned char * flags, unsigned short * DstFrame, int Amp_Thr)
+void DenoiseFilter::Denoise(int w, int h, unsigned short *phase, unsigned short *amplitude, unsigned char *flags,
+							unsigned short *new_phase_frame, int amplitude_th)
 {
 	Matrix depthMat(w, h, phase);
 
@@ -81,7 +82,7 @@ void DepthCameraFilter::Depth_Denoise(int w, int h, unsigned short * phase, unsi
 			{
 				AmpMat.data[i][j] = 3;
 			}
-			else if (amplitude[Index]  > Amp_Thr)
+			else if (amplitude[Index]  > amplitude_th)
 			{
 				AmpMat.data[i][j] = 1;
 			}
@@ -101,7 +102,7 @@ void DepthCameraFilter::Depth_Denoise(int w, int h, unsigned short * phase, unsi
 
 			if (AmpMat.data[i][j] == 0)
 			{
-				DstFrame[Index] = 0;
+				new_phase_frame[Index] = 0;
 				continue;
 			}
 
@@ -142,10 +143,10 @@ void DepthCameraFilter::Depth_Denoise(int w, int h, unsigned short * phase, unsi
 			}
 			if ((edgeNum > 1))
 			{
-				DstFrame[Index] = 0;
+				new_phase_frame[Index] = 0;
 				continue;
 			}
-			DstFrame[Index] = Convolution(&AmpMatROI, &Relation, &Dis2DMat, &DepthROI);
+			new_phase_frame[Index] = Convolution(&AmpMatROI, &Relation, &Dis2DMat, &DepthROI);
 		}
 	}
 }

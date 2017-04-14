@@ -5,14 +5,13 @@ SET(PROJECT_NAME inmotion_dc_sdk_test)
 # define project will set CMAKE_CXX_FLAGS to NULL
 PROJECT (${PROJECT_NAME})
 
-option(USE_LIBUDEV "ON to use libudev to get uvc related command port" ON)
-option(USE_LIBUVC "ON to use libuvc to replace v4l2 to get uvc data from camera" ON)
-
 SET(SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/source)
 SET(CMAKE_CXX_FLAGS "-Wall -std=c++11 -Werror ${CMAKE_CXX_FLAGS}")
 
-IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+INCLUDE_DIRECTORIES(${SRCDIR})
 
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    option(USE_LIBUDEV "ON to use libudev to get uvc related command port" ON)
     file(GLOB_RECURSE SRC_LIST
         "${SRCDIR}/../msvc/*.cpp"
         "${SRCDIR}/depth_camera_cmd.cpp"
@@ -20,27 +19,14 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         "${SRCDIR}/filter/*.cpp"
         "${SRCDIR}/os/cmd_interface.cpp"
         "${SRCDIR}/os/cmd_interface_linux.cpp"
+        "${SRCDIR}/os/uvc_interface_v4l.cpp"
         "${SRCDIR}/os/uvc_interface.cpp")
 
-    IF(USE_LIBUVC)
-        LIST(APPEND SRC_LIST "${SRCDIR}/os/uvc_interface_libuvc.cpp")
-        add_definitions(-DUVC_DRIVER_LIBUVC)
-    else()
-        LIST(APPEND SRC_LIST "${SRCDIR}/os/uvc_interface_v4l.cpp" )
-    ENDIF()
-
-    INCLUDE_DIRECTORIES(${SRCDIR})
     ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
-
     TARGET_LINK_LIBRARIES(${PROJECT_NAME} pthread)
-
     IF(USE_LIBUDEV)
         ADD_DEFINITIONS(-DUSE_UDEV)
         TARGET_LINK_LIBRARIES(${PROJECT_NAME} udev)
-    ENDIF()
-
-    IF(USE_LIBUVC)
-        TARGET_LINK_LIBRARIES(${PROJECT_NAME} uvc)
     ENDIF()
 
 ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -53,20 +39,9 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
         "${SRCDIR}/os/cmd_interface.cpp"
         "${SRCDIR}/os/uvc_interface.cpp"
         "${SRCDIR}/os/cmd_interface_win.cpp"
-        "${SRCDIR}/os/uvc_interface_direct_show.cpp"
-        "${SRCDIR}/os/uvc_interface_libuvc.cpp")
+        "${SRCDIR}/os/uvc_interface_direct_show.cpp")
 
-    IF(USE_LIBUVC)
-        LIST(APPEND SRC_LIST "${SRCDIR}/os/uvc_interface_libuvc.cpp")
-        add_definitions(-DUVC_DRIVER_LIBUVC)
-    ENDIF()
-
-    INCLUDE_DIRECTORIES(${SRCDIR})
     ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
-
-    IF(USE_LIBUVC)
-        TARGET_LINK_LIBRARIES(${PROJECT_NAME} libuvc)
-    ENDIF()
 
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 

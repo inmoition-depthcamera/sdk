@@ -23,10 +23,11 @@ public:
 	
 	bool IsOpened() { return mIsOpened.load(); }
 	bool HasNewFrame() { bool ret = mHasNewFrame; mHasNewFrame = false; return ret; }
+
+protected:
 	// This function should been called before open
 	void SetUvcFrameCallBack(std::function<void(double sample_time, uint8_t *frame_buf, int32_t frame_buf_len, void * param)> cb, void *param);
 
-protected:
 	std::atomic<bool> mIsOpened;
 	std::function<void(double, uint8_t *, int32_t, void *)> mFrameCallBack;
 	void * mFrameCallBackParam;

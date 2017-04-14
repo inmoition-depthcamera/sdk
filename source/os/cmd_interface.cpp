@@ -1,3 +1,4 @@
+#include <iostream>
 #include "cmd_interface.h"
 
 #define MAX_ACK_BUF_LEN 4096
@@ -72,7 +73,7 @@ void CmdInterface::mRxThreadProc(void * param)
 	while (!cmd_if->mRxThreadExitFlag.load()) {
 		uint32_t readed = 0;
 		bool res = cmd_if->ReadFromIO((uint8_t *)rx_buf + rx_offset, MAX_ACK_BUF_LEN - rx_offset, &readed);
-		if (res) {			
+		if (res && readed) {
 			if (cmd_if->mRxCallBack)
 				cmd_if->mRxCallBack((uint8_t *)rx_buf + rx_offset, readed, cmd_if->mRxCallBackParam);
 

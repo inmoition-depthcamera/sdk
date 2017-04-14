@@ -8,25 +8,23 @@
 #include <functional>
 #include <mutex>
 
-
 using namespace std;
 
+typedef struct{
+    int32_t w;
+    int32_t h;
+    uint16_t *phase;
+    uint16_t *amplitude;
+    uint8_t *ambient;
+    uint8_t *flags;
+}DepthFrame;
+
 #if defined WIN32
-	#if defined UVC_DRIVER_LIBUVC
-		#include "os/uvc_interface_libuvc.h"
-		#define UVC_INTERFACE_DRIVER UvcInterfaceLibUvc
-	#else // default uvc driver in windows
-		#include "os/uvc_interface_direct_show.h"
-		#define UVC_INTERFACE_DRIVER UvcInterfaceDirectShow
-	#endif
+    #include "os/uvc_interface_direct_show.h"
+    #define UVC_INTERFACE_DRIVER UvcInterfaceDirectShow
 #else
-	#ifdef UVC_DRIVER_LIBUVC
-		#include "os/uvc_interface_libuvc.h"
-		#define UVC_INTERFACE_DRIVER UvcInterfaceLibUvc
-	#else // default uvc driver in linux
-		#include "os/uvc_interface_v4l.h"
-		#define UVC_INTERFACE_DRIVER UvcInterfaceV4L
-	#endif
+    #include "os/uvc_interface_v4l.h"
+    #define UVC_INTERFACE_DRIVER UvcInterfaceV4L
 #endif 
 
 class DepthCameraUvcPort : public UVC_INTERFACE_DRIVER
@@ -38,35 +36,28 @@ public:
 	virtual bool Open(std::string &camera_name) override;
 	virtual bool Close() override;
 
-    int32_t GetDepthCameraList(vector<string> &camera_list);
+    bool GetDepthCameraList(vector<string> &camera_list);
     
-    void SetDepthFrameCallback(std::function<void(const uint16_t * phase, const uint16_t * amplitude, 
-		const uint8_t * ambient, const uint8_t * flags, void *param)>, void *param);
+    void SetDepthFrameCallback(std::function<void(const DepthFrame *depth_frame, void *param)>, void *param);
 
-    bool GetDepthFrame(uint16_t * phase, uint16_t * amplitude, uint8_t * ambient, uint8_t * flags);
+    bool GetDepthFrame(DepthFrame *df);
 
-    int32_t DepthToPointCloud(const uint16_t *phase, float *point_clould);
-    int32_t DepthToPointCloud(const uint16_t *phase, float *point_clould,
-		const uint16_t *amplitude = NULL, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
+    int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould);
+    int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
 	
-	virtual int32_t GetWidth() { return mWidth; };
-	virtual int32_t GetHeight() { return mHeight; };
+	virtual int32_t GetWidth() { return mDepthFrame.w; };
+	virtual int32_t GetHeight() { return mDepthFrame.h; };
 
 private:
-	std::function<void(const uint16_t *, const uint16_t *, const uint8_t *, const uint8_t *, void *)> mOnDepthFrameCallBack;
+	std::function<void(const DepthFrame *, void *)> mOnDepthFrameCallBack;
 	void *mOnDepthFrameCallBackParam;
 
 	static void OnUvcFrame(double sample_time, uint8_t *frame_buf, int32_t frame_buf_len, void *param);
 
 	void SplitUvcFrameToDepthFrame(uint8_t *frame_buf, int32_t frame_buf_len);
 
-	uint16_t* mDepthBuffer;
-	uint16_t* mAmplitudeBuffer;
-	uint8_t*  mAmbintBuffer;
-	uint8_t*  mFlagBuffer;
 
-	int32_t mWidth;
-	int32_t mHeight;
+    DepthFrame mDepthFrame;
 
 	float mWFocal, mHFocal;
 

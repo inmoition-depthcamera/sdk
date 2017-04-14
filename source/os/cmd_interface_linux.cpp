@@ -15,22 +15,19 @@
 
 CmdInterfaceLinux::CmdInterfaceLinux()
 {
+	mComHandle = -1;
 }
 
 CmdInterfaceLinux::~CmdInterfaceLinux()
 {
+	Close();
 }
 
 bool CmdInterfaceLinux::Open(string & port_name)
 {
-	int flags = (O_RDWR | O_NOCTTY | O_CLOEXEC | O_SYNC);
+	int flags = (O_RDWR | O_NOCTTY | O_NONBLOCK);
 	mComHandle = open(port_name.c_str(), flags);
 	if (-1 == mComHandle) {
-		return false;
-	}
-
-	if (-1 == fcntl(mComHandle, F_SETFD, FD_CLOEXEC)) {
-		Close();
 		return false;
 	}
 
@@ -41,50 +38,46 @@ bool CmdInterfaceLinux::Open(string & port_name)
 		return false;
 	}
 
-	// Get port configuration for modification
-	tcgetattr(mComHandle, &options);
-	options.c_iflag = IGNPAR;
-	options.c_cflag &= ~CSIZE;
-	options.c_cflag |= CS8;
-	options.c_cflag |= CRTSCTS;
-	options.c_cflag &= ~PARENB;	//disable parity
-	options.c_cflag &= ~CSTOPB;	//1 stop bit
-	options.c_cflag |= CLOCAL;  // ignore status lines
-	options.c_cflag |= CREAD;   // enable receiver
-	options.c_oflag = 0;
-	options.c_lflag = 0;  // ICANON;
-	options.c_cc[VMIN] = 24;
-	options.c_cc[VTIME] = 1;
+    options.c_iflag &= ~(IXON | IXOFF | IXANY);
+    options.c_cflag &= ~(CSIZE | PARENB | CSTOPB);
+    options.c_cflag |= (CLOCAL | CREAD | CS8 | CRTSCTS);// use rts to notify device port open and close event
+    options.c_oflag = 0;
+    options.c_lflag = 0;
+
+    options.c_cc[VMIN] = 0;
+    options.c_cc[VTIME] = 0;
+
+    if(tcsetattr(mComHandle, TCSANOW, &options) < 0){
+        Close();
+        return false;
+    }
 
 	tcflush(mComHandle, TCIFLUSH);
 
-	tcsetattr(mComHandle, TCSANOW, &options);
-
-	if (-1 == flock(mComHandle, LOCK_EX | LOCK_NB)) {
-		Close();
-		return false;
-	}
-
-	mIsOpened = true;
-
 	mRxThreadExitFlag = false;
 	mRxThread = new std::thread(mRxThreadProc, this);
-	
+	mIsOpened = true;
+
 	return true;
 }
 
 bool CmdInterfaceLinux::Close()
 {
-	if (mComHandle != -1) {
-		close(mComHandle);
-		mComHandle = -1;
+	mRxThreadExitFlag = true;
+
+    if (mComHandle != -1) {
+        close(mComHandle);
+        mComHandle = -1;
+    }
+
+	if (mRxThread && mRxThread->joinable()) {
+		mRxThread->join();
+		delete mRxThread;
+		mRxThread = NULL;
 	}
 
-	if (mRxThread->joinable())
-		mRxThread->join();
+	mIsOpened = false;
 
-	delete mRxThread;
-	mRxThread = NULL;
 	return true;
 }
 
@@ -97,8 +90,7 @@ bool CmdInterfaceLinux::GetUvcRelatedCmdPort(string & uvc_port_name, string & cm
 	struct udev_device *dev;
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev\n");
-		exit(1);
+		return false;
 	}
 	string device_name = uvc_port_name.substr(uvc_port_name.rfind("__") + 2);
 	enumerate = udev_enumerate_new(udev);
@@ -130,11 +122,27 @@ bool CmdInterfaceLinux::GetUvcRelatedCmdPort(string & uvc_port_name, string & cm
 
 bool CmdInterfaceLinux::ReadFromIO(uint8_t * rx_buf, uint32_t rx_buf_len, uint32_t * rx_len)
 {
+	static timespec timeout = {0, (long)(100 * 1e6)};
 	int32_t len = -1;
 	if (IsOpened()) {
-		len = read(mComHandle, rx_buf, rx_buf_len);
-		if(len != -1 && rx_len)
-			*rx_len = len;
+        fd_set read_fds;
+        FD_ZERO (&read_fds);
+        FD_SET (mComHandle, &read_fds);
+        int r = pselect (mComHandle + 1, &read_fds, NULL, NULL, &timeout, NULL);
+        if (r < 0) {
+            // Select was interrupted
+            if (errno == EINTR) {
+                return false;
+            }
+        }else if(r == 0){ // timeout
+            return false;
+        }
+
+		if(FD_ISSET (mComHandle, &read_fds)){
+			len = read(mComHandle, rx_buf, rx_buf_len);
+			if(len != -1 && rx_len)
+				*rx_len = len;
+		}
 	}	
 	return len == -1 ? false : true;
 }

@@ -12,7 +12,7 @@
 
 UvcInterfaceV4L::UvcInterfaceV4L()
 {
-	fd = -1;
+	mFd = -1;
 	mReadFrameThread = NULL;
 	mReadFrameThreadExitFlag = true;
 }
@@ -33,9 +33,9 @@ bool UvcInterfaceV4L::GetUvcCameraList(std::vector<std::string>& camera_list, co
 			if(strstr(ptr->d_name, "video")){
 				std::string full_path = std::string("/dev/") + ptr->d_name;
 				struct v4l2_capability cap;
-				int32_t ffd;
+				int ffd;
 				if ((ffd = open(full_path.c_str(), O_RDWR)) != -1) {
-					int rt = ioctl(ffd,VIDIOC_QUERYCAP,&cap);
+					int rt = ioctl(ffd, VIDIOC_QUERYCAP, &cap);
 					if(rt == 0 && strstr((const char *)cap.card, filter)){
 						full_path += "__" + std::string((const char *)cap.bus_info) + 
 									 "__" + std::string((const char *)cap.card);
@@ -70,29 +70,35 @@ bool UvcInterfaceV4L::Open(std::string & camera_name)
 
 error:
 	close(mFd);
-	fd = -1;
+	mFd = -1;
 	return false;
 }
 
 bool UvcInterfaceV4L::Close()
 {
 	mReadFrameThreadExitFlag = true;
-	int32_t frame_size = mUvcWidth * mUvcHeight * 2;
+
 	if (mIsOpened)
 		StopStream();
 
-	for (int i = 0; i < NB_BUFFER; i++) {
-		munmap(mMemBuffers[i], frame_size);
-	}
+    if(mReadFrameThread){
+        if(mReadFrameThread->joinable())
+            mReadFrameThread->join();
 
-	if(mReadFrameThread->joinable()){
-		mReadFrameThread->join();
-	}
-	delete mReadFrameThread;
-	mReadFrameThread = NULL;
+        delete mReadFrameThread;
+        mReadFrameThread = NULL;
+    }
 
-	close(fd);
-	fd = -1;
+	for (int i = 0; i < NB_BUFFER; i++){
+        if(mMemBuffers[i])
+            munmap(mMemBuffers[i], mUvcWidth * mUvcHeight * 2);
+    }
+
+    if(mFd != -1){
+        close(mFd);
+        mFd = -1;
+    }
+
 	return true;
 }
 
@@ -109,7 +115,7 @@ bool UvcInterfaceV4L::InitV4L()
 		exit(1);
 	}
 	memset(&cap, 0, sizeof (struct v4l2_capability));
-	ret = ioctl(fd, VIDIOC_QUERYCAP, &cap);
+	ret = ioctl(mFd, VIDIOC_QUERYCAP, &cap);
 	if (ret < 0) {
 		fprintf(stderr, "Error opening device %s: unable to query device.\n",
 			mDeviceName.c_str());
@@ -132,7 +138,7 @@ bool UvcInterfaceV4L::InitV4L()
 	/* set format in */
 	memset(&fmt, 0, sizeof (struct v4l2_format));
 	fmt.type=V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	ret = ioctl(fd, VIDIOC_G_FMT, &fmt);
+	ret = ioctl(mFd, VIDIOC_G_FMT, &fmt);
 	if (ret < 0) {
 		fprintf(stderr, "Unable to get format: %d.\n", errno);
 		return false;
@@ -144,7 +150,7 @@ bool UvcInterfaceV4L::InitV4L()
 	mUvcWidth = fmt.fmt.pix.width;
 	mUvcHeight = fmt.fmt.pix.height;
 	
-	ret = ioctl(fd, VIDIOC_S_FMT, &fmt);
+	ret = ioctl(mFd, VIDIOC_S_FMT, &fmt);
 	if (ret < 0) {
 		fprintf(stderr, "Unable to set format: %d.\n", errno);
 		return false;
@@ -155,7 +161,7 @@ bool UvcInterfaceV4L::InitV4L()
 	rb.count = NB_BUFFER;
 	rb.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	rb.memory = V4L2_MEMORY_MMAP;
-	ret = ioctl(fd, VIDIOC_REQBUFS, &rb);
+	ret = ioctl(mFd, VIDIOC_REQBUFS, &rb);
 	if (ret < 0) {
 		fprintf(stderr, "Unable to allocate buffers: %d.\n", errno);
 		return false;
@@ -166,12 +172,12 @@ bool UvcInterfaceV4L::InitV4L()
 		buf.index = i;
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
-		ret = ioctl(fd, VIDIOC_QUERYBUF, &buf);
+		ret = ioctl(mFd, VIDIOC_QUERYBUF, &buf);
 		if (ret < 0) {
 			fprintf(stderr, "Unable to query buffer (%d).\n", errno);
 			return false;
 		}
-		mMemBuffers[i] = mmap(0,buf.length, PROT_READ, MAP_SHARED, fd, buf.m.offset);
+		mMemBuffers[i] = mmap(0,buf.length, PROT_READ, MAP_SHARED, mFd, buf.m.offset);
 		if (mMemBuffers[i] == MAP_FAILED) {
 			fprintf(stderr, "Unable to map buffer (%d)\n", errno);
 			return false;
@@ -183,7 +189,7 @@ bool UvcInterfaceV4L::InitV4L()
 		buf.index = i;
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
-		ret = ioctl(fd, VIDIOC_QBUF, &buf);
+		ret = ioctl(mFd, VIDIOC_QBUF, &buf);
 		if (ret < 0) {
 			fprintf(stderr, "Unable to queue buffer (%d).\n", errno);
 			return false;
@@ -196,7 +202,7 @@ int32_t UvcInterfaceV4L::StartStream()
 {
 	int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	int ret;
-	ret = ioctl(fd, VIDIOC_STREAMON, &type);
+	ret = ioctl(mFd, VIDIOC_STREAMON, &type);
 	if (ret < 0) {
 		fprintf(stderr, "Unable to %s capture: %d.\n", "start", errno);
 		return ret;
@@ -210,13 +216,13 @@ int32_t UvcInterfaceV4L::StopStream()
 	int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	int ret;
 
-	ret = ioctl(fd, VIDIOC_STREAMOFF, &type);
+	ret = ioctl(mFd, VIDIOC_STREAMOFF, &type);
 	if (ret < 0) {
 		fprintf(stderr, "Unable to %s capture: %d.\n", "stop", errno);
 		return ret;
 	}
 
-	mIsOpened = 0;
+	mIsOpened = false;
 	return 0;
 }
 
@@ -230,7 +236,7 @@ void UvcInterfaceV4L::ReadFrameThreadProc(UvcInterfaceV4L *v4l_if)
 		v4l_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		v4l_buf.memory = V4L2_MEMORY_MMAP;
 		v4l_buf.length = frame_size;
-		int ret = ioctl(v4l_if->fd, VIDIOC_DQBUF, &v4l_buf);
+		int ret = ioctl(v4l_if->mFd, VIDIOC_DQBUF, &v4l_buf);
 		if (ret < 0) {
 			fprintf(stderr, "Unable to dequeue buffer (%d).\n", errno);
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -240,7 +246,7 @@ void UvcInterfaceV4L::ReadFrameThreadProc(UvcInterfaceV4L *v4l_if)
 			v4l_if->mFrameCallBack(0, (uint8_t *)v4l_if->mMemBuffers[v4l_buf.index], frame_size, v4l_if->mFrameCallBackParam);
 		}
 
-		ret = ioctl(v4l_if->fd, VIDIOC_QBUF, &v4l_buf);
+		ret = ioctl(v4l_if->mFd, VIDIOC_QBUF, &v4l_buf);
 		if (ret < 0) {
 			fprintf(stderr, "Unable to requeue buffer (%d).\n", errno);
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
