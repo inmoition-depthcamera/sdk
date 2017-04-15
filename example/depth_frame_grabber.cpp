@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 		uvc_port.Open(camera_list[0]);
 	}
 
+	// Grabber 10 seconds frame
 	this_thread::sleep_for(chrono::seconds(10));
 
 	cout << "close uvc port" << endl;

@@ -7,6 +7,7 @@ DepthCameraCmdPort::DepthCameraCmdPort()
 
 DepthCameraCmdPort::~DepthCameraCmdPort()
 {
+
 }
 
 bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name)

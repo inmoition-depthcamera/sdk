@@ -217,6 +217,7 @@ void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t 
 				*ambient_buffer++ = (v & 0x7000) >> 11;
 				*flags_buffer++ = (v & 0x8000) >> 12;
 			}
+			ptr8 = (uint8_t *)ptr16;
 		}
 	}
 	else { // 4 bytes per pixel
