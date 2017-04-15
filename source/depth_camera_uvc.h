@@ -8,16 +8,23 @@
 #include <functional>
 #include <mutex>
 
+
 using namespace std;
 
-typedef struct{
+class DepthFrame{
+public:
     int32_t w;
     int32_t h;
     uint16_t *phase;
     uint16_t *amplitude;
     uint8_t *ambient;
     uint8_t *flags;
-}DepthFrame;
+
+	DepthFrame(int32_t _w, int32_t _h);
+	~DepthFrame();
+	bool CopyTo(DepthFrame *df);
+	bool CopyFrom(DepthFrame *df);
+};
 
 #if defined WIN32
     #include "os/uvc_interface_direct_show.h"
@@ -45,27 +52,25 @@ public:
     int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould);
     int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
 	
-	virtual int32_t GetWidth() { return mDepthFrame.w; };
-	virtual int32_t GetHeight() { return mDepthFrame.h; };
+	virtual int32_t GetWidth() { return mDepthFrame ? mDepthFrame->w : -1; }
+	virtual int32_t GetHeight() { return mDepthFrame ? mDepthFrame->h : -1; }
+
+	void SetHdrMode(bool enable);
 
 private:
 	std::function<void(const DepthFrame *, void *)> mOnDepthFrameCallBack;
 	void *mOnDepthFrameCallBackParam;
 
 	static void OnUvcFrame(double sample_time, uint8_t *frame_buf, int32_t frame_buf_len, void *param);
-
 	void SplitUvcFrameToDepthFrame(uint8_t *frame_buf, int32_t frame_buf_len);
 
-
-    DepthFrame mDepthFrame;
-
+    DepthFrame *mDepthFrame, *mLastDepthFrame, *mHdrDepthFrame;
 	float mWFocal, mHFocal;
-
 	std::mutex mMutex;
-
 	float *mD2PTable;
+	std::atomic_bool mAlreadyPrepared;
+	std::atomic_bool mHdrMode;
 
-	bool mAlreadyPrepared;
 };
 
 #endif

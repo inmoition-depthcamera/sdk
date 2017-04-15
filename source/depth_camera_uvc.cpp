@@ -6,32 +6,33 @@ DepthCameraUvcPort::DepthCameraUvcPort()
 {
 	SetUvcFrameCallBack(OnUvcFrame, this);
 
-	mDepthFrame.w = mDepthFrame.h = 0;
-
-	mDepthFrame.phase = NULL;
-	mDepthFrame.amplitude = NULL;
-	mDepthFrame.ambient = NULL;
-	mDepthFrame.flags = NULL;
+	mDepthFrame = NULL;
+	mLastDepthFrame = NULL;
+	mHdrDepthFrame = NULL;
 
 	mOnDepthFrameCallBack = NULL;
 	mOnDepthFrameCallBackParam = NULL;
-
-	mD2PTable = NULL;
-
+	mHdrMode = false;
 	mAlreadyPrepared = false;
+	mD2PTable = NULL;
 }
 
 DepthCameraUvcPort::~DepthCameraUvcPort()
 {
-	if (mDepthFrame.phase)     delete[] mDepthFrame.phase;
-	if (mDepthFrame.amplitude) delete[] mDepthFrame.amplitude;
-	if (mDepthFrame.ambient)    delete[] mDepthFrame.ambient;
-	if (mDepthFrame.flags)      delete[] mDepthFrame.flags;
+	if(mDepthFrame){
+		delete mDepthFrame;
+		mDepthFrame = NULL;
+	}
 
-	mDepthFrame.phase = NULL;
-	mDepthFrame.amplitude = NULL;
-	mDepthFrame.ambient = NULL;
-	mDepthFrame.flags = NULL;
+	if(mLastDepthFrame){
+		delete mLastDepthFrame;
+		mLastDepthFrame = NULL;
+	}
+
+	if(mHdrDepthFrame){
+		delete mHdrDepthFrame;
+		mHdrDepthFrame = NULL;
+	}
 
 	if (mD2PTable) delete[] mD2PTable;
 }
@@ -49,23 +50,18 @@ bool DepthCameraUvcPort::Open(std::string &camera_name)
 		case 120: w = 80; break;
 		}
 
-		if (mDepthFrame.w != w || mDepthFrame.h != h) {
+		if (mDepthFrame == NULL || mDepthFrame->w != w || mDepthFrame->h != h) {
 
-			mDepthFrame.w = w;
-			mDepthFrame.h = h;
+			if(mDepthFrame) delete mDepthFrame;
+			if(mLastDepthFrame) delete mLastDepthFrame;
+			if(mHdrDepthFrame) delete mHdrDepthFrame;
 
-			if (mDepthFrame.phase)     delete[] mDepthFrame.phase;
-			if (mDepthFrame.amplitude) delete[] mDepthFrame.amplitude;
-			if (mDepthFrame.ambient)   delete[] mDepthFrame.ambient;
-			if (mDepthFrame.flags)     delete[] mDepthFrame.flags;
-			if (mD2PTable)             delete[] mD2PTable;
+			if (mD2PTable) delete[] mD2PTable;
 
-			mDepthFrame.phase     = new uint16_t[mDepthFrame.w * mDepthFrame.h];
-			mDepthFrame.amplitude = new uint16_t[mDepthFrame.w * mDepthFrame.h];
-			mDepthFrame.ambient   = new uint8_t[mDepthFrame.w * mDepthFrame.h];
-			mDepthFrame.flags     = new uint8_t[mDepthFrame.w * mDepthFrame.h];
-
-			mD2PTable = new float[mDepthFrame.w * mDepthFrame.h];
+			mDepthFrame     = new DepthFrame(w, h);
+			mLastDepthFrame = new DepthFrame(w, h);
+			mHdrDepthFrame = new DepthFrame(w, h);
+			mD2PTable = new float[w * h];
 		}
 
 		if (camera_name.find("IDC8060S") != string::npos){
@@ -120,22 +116,16 @@ void DepthCameraUvcPort::SetDepthFrameCallback(std::function<void(const DepthFra
 
 bool DepthCameraUvcPort::GetDepthFrame(DepthFrame *df)
 {
-	int32_t size = mDepthFrame.w * mDepthFrame.h;
 	std::lock_guard<std::mutex> lck(mMutex);
-	if (df->phase)     memcpy(df->phase,     mDepthFrame.phase,     size * sizeof(uint16_t));
-	if (df->amplitude) memcpy(df->amplitude, mDepthFrame.amplitude, size * sizeof(uint16_t));
-	if (df->ambient)   memcpy(df->ambient,   mDepthFrame.ambient,    size * sizeof(uint8_t));
-	if (df->flags)     memcpy(df->flags,     mDepthFrame.flags,      size * sizeof(uint8_t));
-
-	return true;
+	return mDepthFrame->CopyTo(df);
 }
 
 int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould)
 {
 	const uint16_t* p_buf = df->phase;
 
-	int32_t w = mDepthFrame.w;
-	int32_t h = mDepthFrame.h;
+	int32_t w = mDepthFrame->w;
+	int32_t h = mDepthFrame->h;
 	float *table = mD2PTable;
 
 	int32_t totalPoint = 0;
@@ -159,8 +149,8 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * poin
 	const uint16_t* p_buf = df->phase;
 	const uint16_t* a_buf = df->amplitude;
 	
-	int32_t w = mDepthFrame.w;
-	int32_t h = mDepthFrame.h;
+	int32_t w = mDepthFrame->w;
+	int32_t h = mDepthFrame->h;
 	float *table = mD2PTable;
 
 	int32_t totalPoint = 0;
@@ -192,12 +182,12 @@ void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, int
 
 void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t frame_buf_len)
 {
-	int32_t w = mDepthFrame.w;
-	int32_t h = mDepthFrame.h;
-	uint16_t* phase_buffer = mDepthFrame.phase;
-	uint16_t* amplitude_buffer = mDepthFrame.amplitude;
-	uint8_t*  ambient_buffer = mDepthFrame.ambient;
-	uint8_t*  flags_buffer = mDepthFrame.flags;
+	int32_t w = mDepthFrame->w;
+	int32_t h = mDepthFrame->h;
+	uint16_t* phase_buffer = mDepthFrame->phase;
+	uint16_t* amplitude_buffer = mDepthFrame->amplitude;
+	uint8_t*  ambient_buffer = mDepthFrame->ambient;
+	uint8_t*  flags_buffer = mDepthFrame->flags;
 	
 	int32_t total_size = mUvcHeight * mUvcWidth * 2;
 	if (frame_buf_len != total_size)
@@ -238,8 +228,74 @@ void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t 
 			}
 		}
 	}
+
+	DepthFrame *out_frame = mDepthFrame;
+	if(mHdrMode){
+		int32_t frame_size = w * h;
+		for(int i = 0 ; i < frame_size; i ++){
+			// if this frame is overexposed and last is not, use last
+			if(mDepthFrame->flags[i] && (!mLastDepthFrame->flags[i])){
+				mDepthFrame->phase[i]     = mLastDepthFrame->phase[i];
+				mDepthFrame->amplitude[i] = mLastDepthFrame->amplitude[i];
+				mDepthFrame->ambient[i]   = mLastDepthFrame->ambient[i];
+				mDepthFrame->flags[i]     = 0;
+			}
+		}
+		// save current from to last frame
+		mLastDepthFrame->CopyFrom(mDepthFrame);
+	}
 	mMutex.unlock();
 
 	if (mOnDepthFrameCallBack)
-		mOnDepthFrameCallBack(&mDepthFrame, mOnDepthFrameCallBackParam);
+		mOnDepthFrameCallBack(out_frame, mOnDepthFrameCallBackParam);
+}
+
+void DepthCameraUvcPort::SetHdrMode(bool enable)
+{
+	mHdrMode = enable;
+}
+
+
+
+////////// DepthFrame Class /////////////
+DepthFrame::DepthFrame(int32_t _w, int32_t _h)
+{
+	w = _w;
+	h = _h;
+	phase     = new uint16_t[w * h];
+	amplitude = new uint16_t[w * h];
+	ambient   = new uint8_t[w * h];
+	flags     = new uint8_t[w * h];
+}
+
+DepthFrame::~DepthFrame()
+{
+	delete[] phase;
+	delete[] amplitude;
+	delete[] ambient;
+	delete[] flags;
+}
+
+bool DepthFrame::CopyFrom(DepthFrame *df)
+{
+	if(!df || df->w != w || df->h != h)
+		return false;
+	int size = w * h;
+	if (df->phase)     memcpy(phase,     df->phase,      size * sizeof(uint16_t));
+	if (df->amplitude) memcpy(amplitude, df->amplitude,  size * sizeof(uint16_t));
+	if (df->ambient)   memcpy(ambient,   df->ambient,    size * sizeof(uint8_t));
+	if (df->flags)     memcpy(flags,     df->flags,      size * sizeof(uint8_t));
+	return true;
+}
+
+bool DepthFrame::CopyTo(DepthFrame *df)
+{
+	if(!df || df->w != w || df->h != h)
+		return false;
+	int size = w * h;
+	if (df->phase)     memcpy(df->phase,     phase,      size * sizeof(uint16_t));
+	if (df->amplitude) memcpy(df->amplitude, amplitude,  size * sizeof(uint16_t));
+	if (df->ambient)   memcpy(df->ambient,   ambient,    size * sizeof(uint8_t));
+	if (df->flags)     memcpy(df->flags,     flags,      size * sizeof(uint8_t));
+	return true;
 }

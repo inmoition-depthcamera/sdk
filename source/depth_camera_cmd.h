@@ -5,6 +5,7 @@
 #include "inttypes.h"
 #include <vector>
 #include <string>
+#include <future>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ public:
     // Firmware Upgrade
     bool StartUpgrade(string firmware_file_name);
     bool StopUpgrade();
-    bool GetUpgradeProgress();
+    int32_t GetUpgradeProgress();
 
     // Camera param config
     bool SetIntegrationTime(uint8_t value);
@@ -38,7 +39,7 @@ public:
 	bool RestoreFactorySettings();
 	bool GetSystemStatus(string &status_str);
 	bool GetCameraConfig(string &config_str);
-	bool EnableHdr(uint8_t value);
+	bool SetHdrRatio(uint8_t value);
 
     // Low level interface to read & write reg directly
 	bool ReadReg(uint8_t dev_addr, uint8_t reg_addr, uint32_t* reg_value);
@@ -48,7 +49,12 @@ public:
     bool SaveConfig();
 private:
 
-	bool SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str);
+	bool SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str, int32_t timeout = 1000);
+	int32_t Base64Encode(const char *input, size_t input_length, char *out, size_t out_length);
+
+	atomic_bool mIsUpgrading, mStopUpgradingFlag;
+	atomic<int32_t> mUpgradeProgress;
+	future<bool> mUpgradeFuture;
 };
 
 #endif
