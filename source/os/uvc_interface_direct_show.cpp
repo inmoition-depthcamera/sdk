@@ -3,6 +3,12 @@
 
 int32_t UvcInterfaceDirectShow::mComInitCount = 0;
 
+#ifdef DEBUG
+#pragma comment(lib,"strmbasd.lib")
+#else
+#pragma comment(lib,"strmbase.lib")
+#endif // DEBUG
+
 DEFINE_GUID(CLSID_SampleGrabber, 0xc1f400a0, 0x3f08, 0x11d3, 0x9f, 0x0b, 0x00, 0x60, 0x08, 0x03, 0x9e, 0x37);
 DEFINE_GUID(IID_ISampleGrabber,  0x6b652fff, 0x11fe, 0x4fce, 0x92, 0xad, 0x02, 0x66, 0xb5, 0xd7, 0xc7, 0x8f);
 DEFINE_GUID(CLSID_NullRenderer,  0xc1f400a4, 0x3f08, 0x11d3, 0x9f, 0x0b, 0x00, 0x60, 0x08, 0x03, 0x9e, 0x37);
@@ -340,42 +346,6 @@ bool UvcInterfaceDirectShow::ComUnInit()
 	}
 
 	return false;
-}
-
-void UvcInterfaceDirectShow::NukeDownstream(IBaseFilter *pBF) {
-	IPin *pP, *pTo;
-	ULONG u;
-	IEnumPins *pins = NULL;
-	PIN_INFO pininfo;
-	HRESULT hr = pBF->EnumPins(&pins);
-	pins->Reset();
-	while (hr == NOERROR)
-	{
-		hr = pins->Next(1, &pP, &u);
-		if (hr == S_OK && pP)
-		{
-			pP->ConnectedTo(&pTo);
-			if (pTo)
-			{
-				hr = pTo->QueryPinInfo(&pininfo);
-				if (hr == NOERROR)
-				{
-					if (pininfo.dir == PINDIR_INPUT)
-					{
-						NukeDownstream(pininfo.pFilter);
-						mGraph->Disconnect(pTo);
-						mGraph->Disconnect(pP);
-						mGraph->RemoveFilter(pininfo.pFilter);
-					}
-					pininfo.pFilter->Release();
-					pininfo.pFilter = NULL;
-				}
-				pTo->Release();
-			}
-			pP->Release();
-		}
-	}
-	if (pins) pins->Release();
 }
 
 void UvcInterfaceDirectShow::DestroyGraph() {

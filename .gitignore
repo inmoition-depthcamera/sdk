@@ -33,3 +33,4 @@
 build/
 /msvc/Release
 /msvc/x64/Debug
+bin/

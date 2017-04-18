@@ -19,6 +19,9 @@ DepthCameraCmdPort::~DepthCameraCmdPort()
 
 bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name)
 {
+	if (mIsUpgrading)
+		return false;
+
 	mUpgradeFuture = std::async(std::launch::async, [this, &firmware_file_name]{
 		// reset upgrade status
 		mUpgradeProgress = 0;
@@ -31,15 +34,15 @@ bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name)
 			return false;
 		}
 		fw_file.seekg(0, ios::end);
-		uint32_t firmware_file_size = fw_file.tellg();
+		uint32_t firmware_file_size = (uint32_t)fw_file.tellg();
 		fw_file.seekg(0, ios::beg);
 
 		// Set upgrade flag
 		mIsUpgrading = true;
 
 		// send erase cmd
-		const char *erase_cmd = "fwu e\r\n";
-		if(SendCmdAndWaitResult(erase_cmd, strlen(erase_cmd), "Ok", 3000) == false){
+		const char *cmd_str = "fwu erase\r\n";
+		if(SendCmdAndWaitResult(cmd_str, strlen(cmd_str), "Ok", 3000) == false){
 			mUpgradeProgress = -2;
 			return false;
 		}
@@ -51,11 +54,11 @@ bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name)
 		int32_t total_tx_len = 0;
 		do{
 			fw_file.read(buf_raw, SINGLE_TX_LEN);
-			int32_t tx_len = fw_file.gcount();
+			int32_t tx_len = (int32_t)fw_file.gcount();
 			if(tx_len > 0){
 				int32_t base64_len = Base64Encode(buf_raw, tx_len, buf_base64, SINGLE_TX_LEN * 2 - 2);
 				if(base64_len > 0){
-					int32_t cmd_len = sprintf(buf_raw, "fwu w 0x%x 0x%x ", total_tx_len, tx_len);
+					int32_t cmd_len = sprintf(buf_raw, "fwu write 0x%x 0x%x ", total_tx_len, tx_len);
 					SendCmd(buf_raw, cmd_len);
 					buf_base64[base64_len] = '\r';
 					buf_base64[base64_len + 1] = '\n';
@@ -76,6 +79,12 @@ bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name)
 		delete []buf_base64;
 		fw_file.close();
 
+		cmd_str = "fwu finish\r\n";
+		if (SendCmdAndWaitResult(cmd_str, strlen(cmd_str), "Ok", 3000) == false) {
+			mUpgradeProgress = -5;
+			return false;
+		}
+
 		mIsUpgrading = false;
 		return mUpgradeProgress == 100 ? true : false;
 	});
@@ -87,7 +96,8 @@ bool DepthCameraCmdPort::StopUpgrade()
 	if(mIsUpgrading){
 		mStopUpgradingFlag = false;
 		//wait for future result
-		return mUpgradeFuture.get();
+		mUpgradeFuture.get();
+		return true;
 	}
 	return false;
 }
