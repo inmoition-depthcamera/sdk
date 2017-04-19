@@ -237,7 +237,6 @@ bool UvcInterfaceDirectShow::Close()
 		HR = mControl->Stop();
 	}
 
-
 	SAFE_CHECK_RELEASE(mGrabber);
 	SAFE_CHECK_RELEASE(mControl);
 
@@ -365,15 +364,6 @@ void UvcInterfaceDirectShow::DestroyGraph() {
 			memset(&FilterInfo, 0, sizeof(FilterInfo));
 			hr = pFilter->QueryFilterInfo(&FilterInfo);
 			FilterInfo.pGraph->Release();
-
-			int count = 0;
-			char buffer[255];
-			memset(buffer, 0, 255 * sizeof(char));
-
-			while (FilterInfo.achName[count] != 0x00){
-				buffer[count] = (char)FilterInfo.achName[count];
-				count++;
-			}
 			hr = mGraph->RemoveFilter(pFilter);
 			if (FAILED(hr)) return;
 			pFilter->Release();

@@ -1,4 +1,4 @@
-﻿#include "cmd_interface_win.h"
+#include "cmd_interface_win.h"
 
 #include <comdef.h>
 #include <Wbemidl.h>
@@ -105,7 +105,7 @@ bool CmdInterfaceWin::ReadFromIO(uint8_t * rx_buf, uint32_t rx_buf_len, uint32_t
 		res = ReadFile(mComHandle, rx_buf, rx_buf_len, (LPDWORD)rx_len, &mOverlappedRecv);
 		if (res == FALSE){
 			if (GetLastError() == ERROR_IO_PENDING){
-				WaitForSingleObject(mOverlappedRecv.hEvent, INFINITE);
+				WaitForSingleObject(mOverlappedRecv.hEvent, 100);
 				GetOverlappedResult(mComHandle, &mOverlappedRecv, (LPDWORD)rx_len, FALSE);
 			}
 		}
