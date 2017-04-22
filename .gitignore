@@ -34,3 +34,7 @@ build/
 /msvc/Release
 /msvc/x64/Debug
 bin/
+msvc/inmotion-depth-camera-sdk/Debug/
+msvc/inmotion-depth-camera-sdk/Release/
+*.filters
+*.user

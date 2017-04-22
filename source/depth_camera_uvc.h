@@ -26,7 +26,7 @@ public:
 	bool CopyFrom(DepthFrame *df);
 };
 
-#if defined WIN32
+#if defined _MSC_VER 
     #include "os/uvc_interface_direct_show.h"
     #define UVC_INTERFACE_DRIVER UvcInterfaceDirectShow
 #else
