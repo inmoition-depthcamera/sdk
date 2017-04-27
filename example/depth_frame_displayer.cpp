@@ -95,36 +95,39 @@ int main(int argc, char **argv)
 		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
 
 		// should open cmd port first
-		cmd_port.Open(cmd_port_name);
+		//cmd_port.Open(cmd_port_name);
 
-		std::string status;
-		cmd_port.GetSystemStatus(status);
+		//std::string status;
+		//cmd_port.GetSystemStatus(status);
 
-		cout << status << endl;
+		//cout << status << endl;
 
 		// setup depth data call back
-		//uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
+		uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
 
 		// open camera@
-		//if (uvc_port.Open(camera_list[0])) {
-		//	uvc_port.SetHdrMode(true);
-		//}		
+		if (uvc_port.Open(camera_list[0])) {
+			uvc_port.SetHdrMode(true);
+		}		
 
 		// upgrade firmware
 		if (cmd_port.IsOpened()) {
-			cmd_port.StartUpgrade("d:\\depth_sensor_opt8241.ifw", "app");
 
-			while (1) {
-				this_thread::sleep_for(chrono::milliseconds(100));
-				int32_t progress = cmd_port.GetUpgradeProgress();
-				cout << "upgrade progress: " << progress << endl;
+			//if (cmd_port.StartUpgrade("d:\\depth_sensor_opt8241.ifw", "app") == false) {
+			//	cout << "Start upgrade file failed, please check the file is avilable.";
+			//}
 
-				if (progress < 0 || progress >= 100) {
-					cout << "--------" << endl << "upgrade progress ended with code:" << progress << endl;
-					cmd_port.StopUpgrade();
-					break;
-				}
-			}
+			//while (1) {
+			//	this_thread::sleep_for(chrono::milliseconds(100));
+			//	int32_t progress = cmd_port.GetUpgradeProgress();
+			//	cout << "upgrade progress: " << progress << endl;
+			//
+			//	if (progress < 0 || progress >= 100) {
+			//		cout << "--------" << endl << "upgrade progress ended with code:" << progress << endl;
+			//		cmd_port.StopUpgrade();
+			//		break;
+			//	}
+			//}
 		}
 	}
 

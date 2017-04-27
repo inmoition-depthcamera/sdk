@@ -22,6 +22,15 @@ bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name, string type)
 	if (mIsUpgrading)
 		return false;
 
+	// check if the file is avilable
+	std::ifstream fw(firmware_file_name, ios::in);
+	if (!fw.is_open()) {
+		mUpgradeProgress = -1;
+		return false;
+	}
+	fw.close();
+
+	// start upgrade file in a independent thread
 	mUpgradeFuture = std::async(std::launch::async, [this, firmware_file_name, type]{
 		// reset upgrade status
 		mUpgradeProgress = 0;
