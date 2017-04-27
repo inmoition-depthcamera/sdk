@@ -198,7 +198,7 @@ void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t 
 		uint8_t *ptr8 = frame_buf;
 		for (int32_t i = 0; i < h; i++) {			
 			for (int32_t j = 0; j < w; j++) {
-				*amplitude_buffer++ = (uint16_t)*ptr8++;
+				*amplitude_buffer++ = ((uint16_t)*ptr8++) << 4;
 			}
 			uint16_t *ptr16 = (uint16_t *)ptr8;
 			for (int32_t j = 0; j < w; j++) {
@@ -233,16 +233,24 @@ void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t 
 	if(mHdrMode){
 		int32_t frame_size = w * h;
 		for(int i = 0 ; i < frame_size; i ++){
-			// if this frame is overexposed and last is not, use last
-			if(mDepthFrame->flags[i] && (!mLastDepthFrame->flags[i])){
-				mDepthFrame->phase[i]     = mLastDepthFrame->phase[i];
-				mDepthFrame->amplitude[i] = mLastDepthFrame->amplitude[i];
-				mDepthFrame->ambient[i]   = mLastDepthFrame->ambient[i];
-				mDepthFrame->flags[i]     = 0;
-			}
+			// default frame is current frame
+			DepthFrame * frm_ptr = mDepthFrame;
+			// if last frame is overexposed use current.
+			if (mLastDepthFrame->flags[i])
+				frm_ptr = mDepthFrame;
+			else if (mDepthFrame->flags[i]) // if last frame is not overexposed and current is, use last.
+				frm_ptr = mLastDepthFrame;
+			else                            // if last and current frame is ok, use larger amplitude one.
+				frm_ptr = (mDepthFrame->amplitude[i] > mLastDepthFrame->amplitude[i]) ? mDepthFrame : mLastDepthFrame;
+
+			mHdrDepthFrame->phase[i] = frm_ptr->phase[i];
+			mHdrDepthFrame->amplitude[i] = frm_ptr->amplitude[i];
+			mHdrDepthFrame->ambient[i] = frm_ptr->ambient[i];
+			mHdrDepthFrame->flags[i] = frm_ptr->flags[i];
 		}
 		// save current from to last frame
 		mLastDepthFrame->CopyFrom(mDepthFrame);
+		out_frame = mHdrDepthFrame;
 	}
 	mMutex.unlock();
 

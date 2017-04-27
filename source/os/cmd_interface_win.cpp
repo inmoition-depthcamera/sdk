@@ -104,13 +104,15 @@ bool CmdInterfaceWin::ReadFromIO(uint8_t * rx_buf, uint32_t rx_buf_len, uint32_t
 		ResetEvent(mOverlappedRecv.hEvent);
 		res = ReadFile(mComHandle, rx_buf, rx_buf_len, (LPDWORD)rx_len, &mOverlappedRecv);
 		if (res == FALSE){
-			if (GetLastError() == ERROR_IO_PENDING){
-				WaitForSingleObject(mOverlappedRecv.hEvent, 100);
-				GetOverlappedResult(mComHandle, &mOverlappedRecv, (LPDWORD)rx_len, FALSE);
+			if (GetLastError() == ERROR_IO_PENDING){				
+				if (WaitForSingleObject(mOverlappedRecv.hEvent, INFINITE) == WAIT_OBJECT_0) {
+					GetOverlappedResult(mComHandle, &mOverlappedRecv, (LPDWORD)rx_len, FALSE);
+					return true;
+				}				
 			}
 		}
 	}
-	return true;
+	return false;
 }
 
 bool CmdInterfaceWin::WriteToIo(const uint8_t * tx_buf, uint32_t tx_buf_len, uint32_t * tx_len)

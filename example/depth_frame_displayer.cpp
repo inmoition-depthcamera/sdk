@@ -20,7 +20,7 @@ void cvDrawDepthFrame(const DepthFrame *df, const char *name, const char *text){
 
 	int types[4] = {CV_16UC1, CV_16UC1, CV_8UC1, CV_8UC1};
 	void *datas[4] = {df->phase, df->amplitude, df->ambient, df->flags};
-	double scales[4][2] = {{0, 3072}, {0, 255}, {0, 16}, {0, 8}};
+	double scales[4][2] = {{0, 3072}, {0, 4096}, {0, 16}, {0, 8}};
 	for(int i = 0 ; i < 4; i ++){
 		Mat mat = Mat(df->h, df->w, types[i], datas[i]);
 		Mat roi_mat = mat(roi_rect);
@@ -35,7 +35,11 @@ void cvDrawDepthFrame(const DepthFrame *df, const char *name, const char *text){
 	int pos[4][2] = {{0, 10}, {df->w, 10}, {0, df->h + 10}, {df->w, df->h + 10}};
 	for(int i = 0 ; i < 4; i ++){
 		int size = roi_rect.size().area();
-		sprintf(line_buf, "%s(%0.02f)", names[i], (float)roi_sums[i] / size);
+		float v = (float)roi_sums[i] / size;
+		if(i == 0)
+			sprintf(line_buf, "%s(%0.02f -> %d mm)", names[i], v, (int)(v * 7500 / 3072));
+		else
+			sprintf(line_buf, "%s(%0.02f)", names[i], v);
 		Size name_size = getTextSize(line_buf, CV_FONT_HERSHEY_SIMPLEX, 0.4, 1, 0);
 		putText(frame_mat, line_buf, Point(pos[i][0] + (df->w - name_size.width) / 2, pos[i][1]), CV_FONT_HERSHEY_SIMPLEX, 0.4, Scalar(255, 0, 0));
 		rectangle(sub_frames[i], roi_rect, Scalar(255, 255, 255));
@@ -99,20 +103,39 @@ int main(int argc, char **argv)
 		cout << status << endl;
 
 		// setup depth data call back
-		uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
+		//uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
 
-		// open camera
-		uvc_port.Open(camera_list[0]);
+		// open camera@
+		//if (uvc_port.Open(camera_list[0])) {
+		//	uvc_port.SetHdrMode(true);
+		//}		
+
+		// upgrade firmware
+		if (cmd_port.IsOpened()) {
+			cmd_port.StartUpgrade("d:\\depth_sensor_opt8241.ifw", "app");
+
+			while (1) {
+				this_thread::sleep_for(chrono::milliseconds(100));
+				int32_t progress = cmd_port.GetUpgradeProgress();
+				cout << "upgrade progress: " << progress << endl;
+
+				if (progress < 0 || progress >= 100) {
+					cout << "--------" << endl << "upgrade progress ended with code:" << progress << endl;
+					cmd_port.StopUpgrade();
+					break;
+				}
+			}
+		}
 	}
 
 	// Grabber 10 seconds frame
-	this_thread::sleep_for(chrono::seconds(100));
+	this_thread::sleep_for(chrono::seconds(1000));
 
 	cout << "close uvc port" << endl;
 	uvc_port.Close();
 
-	cout << "close cmd port" << endl;
-	cmd_port.Close();
+	//cout << "close cmd port" << endl;
+	//cmd_port.Close();
 
 	cout << "app shutdown" << endl;
 	return 0;

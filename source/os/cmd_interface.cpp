@@ -78,17 +78,11 @@ void CmdInterface::mRxThreadProc(void * param)
 				cmd_if->mRxCallBack((uint8_t *)rx_buf + rx_offset, readed, cmd_if->mRxCallBackParam);
 
 			rx_offset += readed;
-			char *str1 = NULL;
-			// check for "/>"
-			for (uint32_t i = 1; i < rx_offset; i++) {
-				if (rx_buf[i - 1] == '/' && rx_buf[i] == '>') {
-					str1 = rx_buf + i + 2;
-					break;
-				}
-			}
-
+			
+			rx_buf[rx_offset] = 0;
+			char *str1 = strstr(rx_buf, "idcs>");			
 			if (str1 != NULL) {
-				char *str2 = str1;
+				char *str2 = str1 + 5;
 				while (str1 > rx_buf && *str1 != '\n')
 					str1--;
 				cmd_if->mMutex.lock();

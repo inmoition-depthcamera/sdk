@@ -51,7 +51,7 @@ public:
 	/// \param firmware_file_name the firmware file path name.
 	/// \return If last upgrading process has not finished, will 
 	///         return false, else will return true
-    bool StartUpgrade(string firmware_file_name);
+    bool StartUpgrade(string firmware_file_name, string type);
 
 	/// \brief Start Stop the upgrading process
 	/// 
@@ -129,7 +129,8 @@ public:
 private:
 
 	bool SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str, int32_t timeout = 1000);
-	int32_t Base64Encode(const char *input, size_t input_length, char *out, size_t out_length);
+	static int32_t Base64Encode(const char *input, size_t input_length, char *out, size_t out_length);
+	static uint32_t Crc32(const char *input, int32_t input_len, int32_t offset = 0, uint32_t crc = 0xFFFFFFFF);
 
 	atomic_bool mIsUpgrading, mStopUpgradingFlag;
 	atomic<int32_t> mUpgradeProgress;
