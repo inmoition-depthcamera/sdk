@@ -178,6 +178,30 @@ bool DepthCameraCmdPort::SetHdrRatio(uint8_t value) {
 	return SendCmdAndWaitResult(cmd, len, "success ->");
 }
 
+bool DepthCameraCmdPort::Calibration(int32_t distance)
+{
+	char cmd[32];
+
+	for (int i = 1; i <= 2; i++) {
+		// begin test
+		int32_t len = snprintf(cmd, sizeof(cmd), "cali f%d test\r\n", i);
+		bool ret = SendCmdAndWaitResult(cmd, len, "success ->");
+		if (!ret)
+			return false;
+
+		// wait for a second
+		this_thread::sleep_for(chrono::seconds(1));
+
+		// set data
+		len = snprintf(cmd, sizeof(cmd), "cali f%d set %d\r\n", i, distance);
+		ret = SendCmdAndWaitResult(cmd, len, "success ->");
+		if (!ret)
+			return false;
+	}
+
+	return true;
+}
+
 bool DepthCameraCmdPort::GetSystemStatus(string &status_str)
 {
 	char response_buf[2048];

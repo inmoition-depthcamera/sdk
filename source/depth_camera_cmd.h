@@ -118,7 +118,7 @@ public:
 	bool SetHdrRatio(uint8_t value);
 	
 	// Camera Calibration
-	bool Calibration(int32_t distance, int32_t avg_cnt);
+	bool Calibration(int32_t distance);
 
     // Low level interface to read & write reg directly
 	bool ReadReg(uint8_t dev_addr, uint8_t reg_addr, uint32_t* reg_value);
