@@ -395,7 +395,5 @@ STDMETHODIMP UvcInterfaceDirectShow::GrabberCB::BufferCB(double sample_time, BYT
 {
 	if (mOnNewDataCallBack)
 		mOnNewDataCallBack(sample_time, pbuffer, buffer_len, mOnNewDataCallBackUserParam);
-
-	mUvcIf->mHasNewFrame = true;
 	return S_OK;
 }

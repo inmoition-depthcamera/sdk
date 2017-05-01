@@ -22,7 +22,6 @@ public:
 	inline int32_t GetHeight() { return mUvcHeight; }
 	
 	bool IsOpened() { return mIsOpened.load(); }
-	bool HasNewFrame() { bool ret = mHasNewFrame; mHasNewFrame = false; return ret; }
 
 protected:
 	// This function should been called before open
@@ -35,7 +34,7 @@ protected:
 	int32_t mUvcWidth;
 	int32_t mUvcHeight;
 
-	bool mHasNewFrame;
+	std::atomic<bool> mHasNewFrame;
 };
 
 #endif

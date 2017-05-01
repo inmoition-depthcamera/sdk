@@ -42,6 +42,7 @@ private:
 	static Matrix AmpMatROI;
 	static Matrix AmpRatio;
 	Matrix AmpMat;
+	bool mInited;
 };
 
 #endif

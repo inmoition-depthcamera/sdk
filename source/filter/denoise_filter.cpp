@@ -45,6 +45,7 @@ Matrix DenoiseFilter::AmpRatio;
 
 DenoiseFilter::DenoiseFilter()
 {
+	mInited = false;
 }
 
 DenoiseFilter::~DenoiseFilter()
@@ -53,13 +54,16 @@ DenoiseFilter::~DenoiseFilter()
 
 void DenoiseFilter::Init(int w, int h)
 {
-	AmpMat.SetMatrix(w, h, NULL);
+	if(mInited == false)
+		AmpMat.SetMatrix(h, w, NULL);
+	mInited = true;
 }
 
 void DenoiseFilter::Denoise(int w, int h, unsigned short *phase, unsigned short *amplitude, unsigned char *flags,
 							unsigned short *new_phase_frame, int amplitude_th)
 {
-	Matrix depthMat(w, h, phase);
+	Matrix depthMat(h, w, phase);
+	memset(new_phase_frame, 0, (sizeof(unsigned short) * w * h));
 
 	for (int i = 0; i < h; i++)
 	{

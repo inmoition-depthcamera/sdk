@@ -49,8 +49,9 @@ public:
 
     bool GetDepthFrame(DepthFrame *df);
 
-    int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould);
-    int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
+    int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould, float scale = 1.0f);
+	int32_t DepthToPointCloud(const uint16_t *phase, int32_t w, int32_t h, float * point_clould, float scale = 1.0f);
+    int32_t DepthToFiltedPointCloud(const DepthFrame *df, float *point_clould, float scale = 1.0f, uint16_t phaseMax = 3072, uint16_t amplitudeMin = 64);
 	
 	virtual int32_t GetWidth() { return mDepthFrame ? mDepthFrame->w : -1; }
 	virtual int32_t GetHeight() { return mDepthFrame ? mDepthFrame->h : -1; }

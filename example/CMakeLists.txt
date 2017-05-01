@@ -20,3 +20,12 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 SET(CMAKE_CXX_FLAGS "-Wall -O2 -Werror ${CMAKE_CXX_FLAGS}")
 TARGET_LINK_LIBRARIES(depth_frame_displayer pthread)
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+PROJECT (depth_frame_displeyer_3d)
+ADD_EXECUTABLE(depth_frame_displeyer_3d depth_frame_displeyer_3d.cpp)
+TARGET_LINK_LIBRARIES(depth_frame_displeyer_3d ${OpenCV_LIBS} idc glfw gl)
+
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+SET(CMAKE_CXX_FLAGS "-Wall -O2 -Werror ${CMAKE_CXX_FLAGS}")
+TARGET_LINK_LIBRARIES(depth_frame_displeyer_3d pthread)
+ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")

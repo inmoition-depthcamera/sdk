@@ -61,7 +61,7 @@ void OnDepthFrame(const DepthFrame *df, void*param)
 	if(total_count++ % FPS_AVG == 0){
 		auto cur_avg_time = system_clock::now();
 		auto dt_avg = duration_cast<milliseconds>(cur_avg_time - last_avg_time);
-		dt_avg_v = dt_avg.count();
+		dt_avg_v = (int32_t)dt_avg.count();
 		last_avg_time = cur_avg_time;
 	}
 	char info[128];
@@ -95,11 +95,10 @@ int main(int argc, char **argv)
 		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
 
 		// should open cmd port first
-		//cmd_port.Open(cmd_port_name);
+		cmd_port.Open(cmd_port_name);
 
 		//std::string status;
 		//cmd_port.GetSystemStatus(status);
-
 		//cout << status << endl;
 
 		// setup depth data call back
@@ -107,6 +106,17 @@ int main(int argc, char **argv)
 
 		// open camera@
 		if (uvc_port.Open(camera_list[0])) {
+
+			//cout << "set hdr ratio 2 result: " << cmd_port.SetHdrRatio(0) << endl;
+
+			//cout << "intg time result: " << cmd_port.SetIntegrationTime(60) << endl;
+
+			//cout << "calibration result: " << cmd_port.Calibration(1900) << endl;
+
+			//cout << "save config result: " << cmd_port.SaveConfig() << endl;
+
+			//cout << "set hdr ratio 2 result: " << cmd_port.SetHdrRatio(2) << endl;
+
 			uvc_port.SetHdrMode(true);
 		}		
 

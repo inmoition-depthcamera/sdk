@@ -117,10 +117,14 @@ void DepthCameraUvcPort::SetDepthFrameCallback(std::function<void(const DepthFra
 bool DepthCameraUvcPort::GetDepthFrame(DepthFrame *df)
 {
 	std::lock_guard<std::mutex> lck(mMutex);
+	if (mDepthFrame == NULL || (mHasNewFrame == false))
+		return false;
+	
+	mHasNewFrame = false;
 	return mDepthFrame->CopyTo(df);
 }
 
-int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould)
+int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould, float scale)
 {
 	const uint16_t* p_buf = df->phase;
 
@@ -132,7 +136,7 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * poin
 
 	for (int32_t y = 0; y < h; y++) {
 		for (int32_t x = 0; x < w; x++) {
-			float z = (*p_buf)  * (*table);//z
+			float z = (*p_buf)  * (*table) * scale;//z
 			*point_clould++ = -(float)(x - w / 2) * z / mWFocal;//x
 			*point_clould++ = -(float)(y - h / 2) * z / mHFocal;//y
 			*point_clould++ = z;
@@ -144,7 +148,28 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * poin
 	return totalPoint;
 }
 
-int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould, uint16_t phaseMax, uint16_t amplitudeMin)
+int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t *phase, int32_t w, int32_t h, float * point_clould, float scale)
+{
+	const uint16_t* p_buf = phase;
+	float *table = mD2PTable;
+
+	int32_t totalPoint = 0;
+
+	for (int32_t y = 0; y < h; y++) {
+		for (int32_t x = 0; x < w; x++) {
+			float z = (*p_buf)  * (*table) * scale;//z
+			*point_clould++ = -(float)(x - w / 2) * z / mWFocal;//x
+			*point_clould++ = -(float)(y - h / 2) * z / mHFocal;//y
+			*point_clould++ = z;
+			totalPoint++;
+			p_buf++;
+			table++;
+		}
+	}
+	return totalPoint;
+}
+
+int32_t DepthCameraUvcPort::DepthToFiltedPointCloud(const DepthFrame *df, float * point_clould, float scale, uint16_t phaseMax, uint16_t amplitudeMin)
 {
 	const uint16_t* p_buf = df->phase;
 	const uint16_t* a_buf = df->amplitude;
@@ -158,7 +183,7 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * poin
 	for (int32_t y = 0; y < h; y++){
 		for (int32_t x = 0; x < w; x++){
 			if (*p_buf > 0 && *p_buf <= phaseMax && *a_buf >= amplitudeMin){
-				float z = (*p_buf)  * (*table);//z
+				float z = (*p_buf)  * (*table) * scale;//z
 				*point_clould++ = -(float)(x - w / 2) * z / mWFocal;//x
 				*point_clould++ = -(float)(y - h / 2) * z / mHFocal;//y
 				*point_clould++ = z;
@@ -176,8 +201,10 @@ void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, int
 {
 	DepthCameraUvcPort * dc = (DepthCameraUvcPort *)param;
 
-	if(dc->mAlreadyPrepared)
+	if (dc->mAlreadyPrepared) {
 		dc->SplitUvcFrameToDepthFrame(frame_buf, frame_buf_len);
+		dc->mHasNewFrame = true;
+	}
 }
 
 void DepthCameraUvcPort::SplitUvcFrameToDepthFrame(uint8_t * frame_buf, int32_t frame_buf_len)
