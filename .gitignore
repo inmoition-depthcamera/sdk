@@ -38,3 +38,5 @@ msvc/inmotion-depth-camera-sdk/Debug/
 msvc/inmotion-depth-camera-sdk/Release/
 *.filters
 *.user
+
+msvc/obj/
