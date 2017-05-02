@@ -86,9 +86,7 @@ private:
 	static int32_t mComInitCount;
 
 	HRESULT BindDevice(IBaseFilter** gottaFilter, const char * device_name, WCHAR *w_device_name);
-
-	void DestroyGraph();
-
+	
 	ICaptureGraphBuilder2 *mCaptureGraph;    // Capture graph builder object
 	IGraphBuilder *mGraph;                    // Graph builder object
 	IMediaControl *mControl;                // Media control object

@@ -30,16 +30,15 @@ static void DisplayInfo() {
 		last_avg_time = cur_avg_time;
 	}
 
-	char info[128];
-	sprintf(info, "FPS %0.02f FRM %d", 1000.0f * FPS_AVG / dt_avg_v, total_count);
-
 	if (console_dly++ % FPS_AVG == 0) {
+
 		int32_t x, y;
+		COORD win_size = Console.getWindowSize();
 		Console.getCurPos(&x, &y);
-		Console.moveCursor(0, y);
-		Console << "\r\nFrame Count: " << total_count << "\r\n";
-		Console << "Frame Rate: " << 1000.0f * FPS_AVG / dt_avg_v << "\r\n";
-		Console.moveCursor(0, y);
+		Console.moveCursor(0, win_size.Y);
+		Console << "Frame Count: " << total_count << "\n";
+		Console << "Frame Rate: " << 1000.0f * FPS_AVG / dt_avg_v << "\n";
+		Console.moveCursor(x, y);
 	}
 }
 

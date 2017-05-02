@@ -3,13 +3,19 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir);$(SolutionDir)..\source;$(SolutionDir)..\source\os;$(SolutionDir)..\source\filter;C:\Program Files %28x86%29\GLFW\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files %28x86%29\GLFW\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\source;$(SolutionDir)..\source\os;$(SolutionDir)..\source\filter;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\bin\$(Configuration);$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
+    <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalDependencies>glfw3dll.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

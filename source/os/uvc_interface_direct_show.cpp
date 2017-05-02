@@ -240,10 +240,6 @@ bool UvcInterfaceDirectShow::Close()
 	SAFE_CHECK_RELEASE(mGrabber);
 	SAFE_CHECK_RELEASE(mControl);
 
-	//Destroy the graph
-	if (mGraph)
-		DestroyGraph();
-
 	//Release and zero our capture graph and our main graph
 	SAFE_CHECK_RELEASE(mCaptureGraph);
 	SAFE_CHECK_RELEASE(mGraph);
@@ -345,37 +341,6 @@ bool UvcInterfaceDirectShow::ComUnInit()
 	}
 
 	return false;
-}
-
-void UvcInterfaceDirectShow::DestroyGraph() {
-	HRESULT hr = 0;
-	int i = 0;
-	while (hr == NOERROR){
-		IEnumFilters * pEnum = 0;
-		ULONG cFetched;
-		// We must get the enumerator again every time because removing a filter from the graph
-		// invalidates the enumerator. We always get only the first filter from each enumerator.
-		hr = mGraph->EnumFilters(&pEnum);
-		if (FAILED(hr)) return;
-
-		IBaseFilter * pFilter = NULL;
-		if (pEnum->Next(1, &pFilter, &cFetched) == S_OK){
-			FILTER_INFO FilterInfo;
-			memset(&FilterInfo, 0, sizeof(FilterInfo));
-			hr = pFilter->QueryFilterInfo(&FilterInfo);
-			FilterInfo.pGraph->Release();
-			hr = mGraph->RemoveFilter(pFilter);
-			if (FAILED(hr)) return;
-			pFilter->Release();
-			pFilter = NULL;
-		}
-		else 
-			break;
-		pEnum->Release();
-		pEnum = NULL;
-		i++;
-	}
-	return;
 }
 
 ///////////////////////// Class for GrabberCB

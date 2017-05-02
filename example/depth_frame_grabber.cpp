@@ -1,6 +1,6 @@
 
-#include "depth_camera_cmd.h"
-#include "depth_camera_uvc.h"
+#include <depth_camera_cmd.h>
+#include <depth_camera_uvc.h>
 
 #include "iostream"
 
@@ -20,12 +20,12 @@ void OnDepthFrame(const DepthFrame *df, void*param){
 	if(total_count % 30 == 0){
 		auto cur_avg_time = system_clock::now();
 		auto dt_avg = duration_cast<milliseconds>(cur_avg_time - last_avg_time);
-		dt_avg_v = dt_avg.count();
+		dt_avg_v = (int32_t)dt_avg.count();
 		last_avg_time = cur_avg_time;
 	}
 
 	last_time = cur_time;
-	uint32_t dt_v = dt.count();
+	int32_t dt_v = (int32_t)dt.count();
 	printf("frame size: w = %d, h = %d, fps_rt: %0.02f fps: %0.02f (%d)\n",
 		   df->w, df->h, 1000.0f / dt_v,
 		   dt_avg_v ? 1000.0f * 30 / dt_avg_v : 0, total_count);
