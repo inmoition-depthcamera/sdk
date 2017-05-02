@@ -1,5 +1,5 @@
 #include "denoise_filter.h"
-
+#include "string.h"
 
 const int DenoiseFilter::dx1[8] = { -1,-1,-1,0,0,1,1,1 };
 const int DenoiseFilter::dy1[8] = { -1,0,1,-1,1,-1,0,1 };

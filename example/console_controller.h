@@ -36,6 +36,10 @@ enum SpecialKeyCodes {
 
 #include <curses.h>
 
+typedef struct{
+    int32_t X;
+    int32_t Y;
+}COORD;
 #endif // _WIN32
 
 

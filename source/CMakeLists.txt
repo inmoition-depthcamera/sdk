@@ -22,7 +22,7 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         "${SRCDIR}/os/cmd_interface_linux.cpp"
         "${SRCDIR}/os/uvc_interface_v4l.cpp"
         "${SRCDIR}/os/uvc_interface.cpp")
-
+        
     ADD_LIBRARY(${SDK_NAME}_shared SHARED ${SRC_LIST})
     ADD_LIBRARY(${SDK_NAME}_static STATIC ${SRC_LIST})
 

@@ -142,14 +142,14 @@ void ConsoleController::ShowCursor(bool show_hide)
 #ifdef _WIN32
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_CURSOR_INFO CursorInfo;
-	GetConsoleCursorInfo(handle, &CursorInfo);//获取控制台光标信息  
+	GetConsoleCursorInfo(handle, &CursorInfo);
 	CursorInfo.bVisible = show_hide;
-	SetConsoleCursorInfo(handle, &CursorInfo);//设置控制台光标状态  
+	SetConsoleCursorInfo(handle, &CursorInfo); 
 #else
 	if(!show_hide)
 		printf("\033[?25l");
 	else
-		printf("\033[?25h")
+		printf("\033[?25h");
 #endif
 }
 
@@ -352,6 +352,7 @@ int posix_translateKey() {
 	int ch = getch();
     if (ch == ERR) return 0;
 	if (ch == '\r') return '\n';
+    return 0;
 }
 #endif //_WIN32
 

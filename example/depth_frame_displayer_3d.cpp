@@ -4,7 +4,7 @@
 #include <depth_camera_uvc.h>
 #include <denoise_filter.h>
 
-#include <GLFW\glfw3.h>
+#include <GLFW/glfw3.h>
 #include "console_controller.h"
 
 using namespace std;
@@ -20,7 +20,6 @@ ConsoleController Console;
 static void DisplayInfo() {
 
 	const int FPS_AVG = 20;
-	static bool first_display = true;
 	static auto last_avg_time = system_clock::now();
 	static int32_t dt_avg_v = 0, total_count = 0, console_dly = 0;
 
@@ -48,7 +47,6 @@ static void DepthFrameToRgbFrame(DepthFrame *df,  uint8_t * out) {
 
 	uint16_t *phase_ptr, *amplitude_ptr;
 	uint8_t *flags_ptr, *ambient_ptr;
-	uint32_t size = df->w * df->h;
 
 	phase_ptr = df->phase;
 	amplitude_ptr = df->amplitude;
@@ -93,7 +91,6 @@ static void DrawAllViews(DepthFrame *df, DepthCameraUvcPort *uvc) {
 	static uint8_t * rgb_buf = NULL;
 	static float *cloud_points = NULL;
 	static uint16_t *filted_phase = NULL;
-	static int32_t frame_count = 0, console_dly = 0;
 
 	DepthCameraDenoiseFilter.Init(df->w, df->h);
 
@@ -113,10 +110,7 @@ static void DrawAllViews(DepthFrame *df, DepthCameraUvcPort *uvc) {
 	glfwGetFramebufferSize(GlMainWindow, &fw, &fh);
 	glfwGetWindowSize(GlMainWindow, &ww, &wh);
 
-	float dw = 2.0f * (float)(ww - wh) / (float)ww;
 	int32_t gw = (fw - fh) / 2;
-	int32_t gh = fh / 2;
-	int32_t pos[4][2] = { {0, gh }, {0, 0}, {gw , gh },  {gw, 0} };
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -173,7 +167,6 @@ static void cursor_position_callback(GLFWwindow* window, double x, double y)
 {
 	int wnd_width, wnd_height, fb_width, fb_height;
 	double scale;
-	static double xpos = 0, ypos = 0;
 
 	if (MouseDownFlag) {
 		glfwGetWindowSize(window, &wnd_width, &wnd_height);
@@ -230,30 +223,27 @@ int main(int argc, char **argv)
 	string uvc_name;
 	uvc_port.GetDepthCameraList(camera_list);
     if(camera_list.size() > 0){
-
 		// get uvc relate cmd port(ttyACMx)
 		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
-
 		// should open cmd port first
 		if (!cmd_port.Open(cmd_port_name)) {
 			cout << "Can't Open cmd port" << endl;
 			return -1;
 		}
-		
 		uvc_name = camera_list[0].substr(camera_list[0].find_last_of('_') + 1);
-
 		cout << "Opening " << uvc_name << "..." << endl;
-
 		// open camera@
 		if (!uvc_port.Open(camera_list[0])) {
 			cout << "Can't Open uvc port" << endl;
 			return -1;
 		}
-
 		// get current camera information
 		std::string status;
 		cmd_port.GetSystemStatus(status);
 		cout << status << endl;
+	} else {
+		cout << "Can't Find Inmotion Depth Camera" << endl;
+		return -1;
 	}
 
 	int32_t w, h;
