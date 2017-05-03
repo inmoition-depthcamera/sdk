@@ -14,12 +14,12 @@ using namespace std;
 /// @brief Depth Frame structure to store depth data.
 class DepthFrame{
 public:
-    int32_t w;
-    int32_t h;
-    uint16_t *phase;
-    uint16_t *amplitude;
-    uint8_t *ambient;
-    uint8_t *flags;
+	int32_t w;           /// The Width of the depth frame
+	int32_t h;           /// The Heigth of the depth frame 
+	uint16_t *phase;     /// The Phase of the depth frame (distance = phase * K). Only low 12 bits has been used.
+	uint16_t *amplitude; /// The amplitude of each pixel. Only low 12 bits is used. (Some camera's low 4 bits is zero).
+	uint8_t *ambient;    /// The ambient of each pixel. Only low 3 Bits has been used.
+	uint8_t *flags;      /// The over explote flag of each pixel. Only low 1 bit has been used.
 
 	DepthFrame(int32_t _w, int32_t _h);
 	~DepthFrame();

@@ -53,7 +53,7 @@ public:
 	///         return false, else will return true
     bool StartUpgrade(string firmware_file_name, string type);
 
-	/// @brief Start Stop the upgrading process
+	/// @brief Stop the upgrading process
 	/// 
 	/// This function will set a flag and wait last upgrading thread
 	/// to exit.
@@ -106,11 +106,10 @@ public:
 	bool SwitchMirror();
 
 	/// @brief Set the Binning of the depth camera
-	/// @param rows Binning 
+	/// @param rows Binning rows
+	/// @param columns Binning colums
 	/// @return Return ture if successed
-	/// @note Some depth camera will not work, in a wrong frame
-	///       rate value. High frame rate will reduce the detect
-	///       range of camera.
+	/// @note Some depth camera will not support binning.
 	bool SetBinning(uint8_t rows, uint8_t columns);
 
 	/// @brief Restore depth camera setting to factory setting.
