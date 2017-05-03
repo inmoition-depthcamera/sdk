@@ -12,8 +12,22 @@ public:
 	~CmdInterfaceWin();
 
 	// Inherited via CmdInterface
+	/// @brief Open cmd port with given name
+	/// 
+	/// The port name can be found by GetDepthCameraList and GetUvcRelatedCmdPort function.
+	///
+	/// @param port_name The cmd port name to be opend
+	/// @return Return ture if successed
 	virtual bool Open(string &port_name) override;
+
+	/// @brief Close the uvc port
+	/// @return Return ture if successed
 	virtual bool Close() override;
+
+	/// @brief Get the cmd port name by uvc port name
+	/// @param uvc_port_name The uvc port name, which could be found by GetDepthCameraList function
+	/// @param cmd_port_name The output cmd port name, which could be used by Open function
+	/// @return Return ture if successed
 	virtual bool GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_port_name) override;
 
 protected:

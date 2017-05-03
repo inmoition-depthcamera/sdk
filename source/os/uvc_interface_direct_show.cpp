@@ -74,18 +74,21 @@ bool UvcInterfaceDirectShow::GetUvcCameraList(std::vector<std::string> &camera_l
 				CreateBindCtx(0, &bindCtx);
 
 				hr = pMoniker->GetDisplayName(bindCtx, NULL, &str);
-				if (SUCCEEDED(hr))
-				{
+				if (SUCCEEDED(hr)){
 					WideCharToMultiByte(CP_ACP, 0, str, -1, name_buf, 1024, NULL, NULL);
 
 					IMalloc *pMalloc;
 					hr = CoGetMalloc(1, &pMalloc);
 					if (SUCCEEDED(hr))
 						pMalloc->Free(str);
+				}else {
+					pMoniker->Release();
+					bindCtx->Release();
+					continue;
 				}
 
 				bindCtx->Release();
-				
+
 				int len = strlen(name_buf);
 				name_buf[len++] = '_';
 				name_buf[len++] = '_';
@@ -99,7 +102,9 @@ bool UvcInterfaceDirectShow::GetUvcCameraList(std::vector<std::string> &camera_l
 						name_buf[count] = (char)varName.bstrVal[count - len];
 						count++;
 					}
-					name_buf[count] = 0;
+
+					if(count < 1024)
+						name_buf[count] = 0;
 					
 					if(filter && strstr(name_buf, filter))
 						camera_list.push_back(name_buf);

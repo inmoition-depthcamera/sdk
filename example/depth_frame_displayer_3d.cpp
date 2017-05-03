@@ -42,6 +42,7 @@ static void DisplayInfo() {
 	}
 }
 
+// convert depthframe to a rgb frame
 static void DepthFrameToRgbFrame(DepthFrame *df,  uint8_t * out) {
 
 	uint16_t *phase_ptr, *amplitude_ptr;

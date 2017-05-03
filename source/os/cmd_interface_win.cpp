@@ -191,49 +191,51 @@ bool CmdInterfaceWin::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_
 	char * pnpStr = NULL;
 
 	string video_pnp;
-	const char *video_name = strstr(uvc_port_name.c_str(), "__");
-	video_name += 2;
 	vector<pair<string, string>> cmd_info;
-	
-	while (pEnumerator){
-		HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1,
-			&pclsObj, &uReturn);
+	const char *video_name = strstr(uvc_port_name.c_str(), "__");
+	if (video_name) {
+		video_name += 2;
+		while (pEnumerator) {
+			HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1,
+				&pclsObj, &uReturn);
 
-		if (0 == uReturn)
-			break;
+			if (0 == uReturn)
+				break;
 
-		VARIANT vtProp;
-		VARIANT pnpProp;
+			VARIANT vtProp;
+			VARIANT pnpProp;
 
-		hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
-		hr = pclsObj->Get(L"PNPDeviceID", 0, &pnpProp, 0, 0);
-		nameStr = _com_util::ConvertBSTRToString(vtProp.bstrVal);
-		pnpStr = _com_util::ConvertBSTRToString(pnpProp.bstrVal);
+			hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
+			hr = pclsObj->Get(L"PNPDeviceID", 0, &pnpProp, 0, 0);
+			nameStr = _com_util::ConvertBSTRToString(vtProp.bstrVal);
+			pnpStr = _com_util::ConvertBSTRToString(pnpProp.bstrVal);
 
-		if (strstr(nameStr, "COM") != NULL){
-			char *p1= strrchr(pnpStr, '\\');
-			char *p2 = strrchr(p1, '&');
-			
-			char * c1 = strrchr(nameStr, '(');
-			char * c2 = strrchr(c1, ')');
-			*c2 = 0; *p2 = 0;
-			pair<string, string> str_pair(c1 + 1, p1);
-			cmd_info.push_back(str_pair);
-		}else{
-			if (strcmp(nameStr, video_name) == 0) {
-				char *start = strrchr(pnpStr, '\\');
-				char *end = strrchr(start, '&');
-				*end = 0;
-				video_pnp = start;
+			if (strstr(nameStr, "COM") != NULL) {
+				char *p1 = strrchr(pnpStr, '\\');
+				char *p2 = strrchr(p1, '&');
+
+				char * c1 = strrchr(nameStr, '(');
+				char * c2 = strrchr(c1, ')');
+				*c2 = 0; *p2 = 0;
+				pair<string, string> str_pair(c1 + 1, p1);
+				cmd_info.push_back(str_pair);
 			}
+			else {
+				if (strcmp(nameStr, video_name) == 0) {
+					char *start = strrchr(pnpStr, '\\');
+					char *end = strrchr(start, '&');
+					*end = 0;
+					video_pnp = start;
+				}
+			}
+
+			delete[] nameStr;
+			delete[] pnpStr;
+
+			VariantClear(&vtProp);
+			VariantClear(&pnpProp);
+			pclsObj->Release();
 		}
-
-		delete[] nameStr;
-		delete[] pnpStr;
-
-		VariantClear(&vtProp);
-		VariantClear(&pnpProp);
-		pclsObj->Release();
 	}
 
 	pSvc->Release();

@@ -178,6 +178,25 @@ bool DepthCameraCmdPort::SetHdrRatio(uint8_t value) {
 	return SendCmdAndWaitResult(cmd, len, "success ->");
 }
 
+bool DepthCameraCmdPort::GetDepthScale(float & scale)
+{
+	char response_buf[1024];
+	char cmd[32];
+	int32_t len = snprintf(cmd, sizeof(cmd), "scale\r\n");
+	int32_t res_len = SendCmdAndWaitResponse(cmd, len, 1000, response_buf, sizeof(response_buf) - 1);
+	if (res_len > 0) {
+		response_buf[res_len] = 0;
+		char * str = strstr((char*)response_buf, "scale: ");
+		char * endstr = strstr((char*)response_buf, "\r\nidcs>");
+		if (endstr) *endstr = 0;
+		if (str) {
+			scale = strtof(str, NULL);
+			return (scale == 0) ? false : true;
+		}
+	}
+	return false;
+}
+
 bool DepthCameraCmdPort::Calibration(int32_t distance)
 {
 	char cmd[32];
@@ -218,36 +237,6 @@ bool DepthCameraCmdPort::GetSystemStatus(string &status_str)
 			return true;
 		}
 	}
-	return false;
-}
-
-bool DepthCameraCmdPort::GetCameraConfig(string &config_str)
-{
-	char response_buf[2048];
-	char cmd[32];
-	int32_t len = snprintf(cmd, sizeof(cmd), "camera\r\n");
-	int32_t res_len = SendCmdAndWaitResponse(cmd, len, 1000, response_buf, sizeof(response_buf) - 1);
-	if (res_len > 0) {
-		response_buf[2047] = 0;
-		char * str = strstr((char*)response_buf, "Send start:\r\n<");
-		char * endstr = strstr((char*)response_buf, ">\r\nSend end.");
-		*endstr = 0;
-		if (str){
-			config_str = str + len;
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool DepthCameraCmdPort::ReadReg(uint8_t dev_addr, uint8_t reg_addr, uint32_t * reg_value)
-{
-	return false;
-}
-
-bool DepthCameraCmdPort::WriteReg(uint8_t dev_addr, uint8_t reg_addr, uint32_t reg_value)
-{
 	return false;
 }
 

@@ -72,6 +72,7 @@ void OnDepthFrame(const DepthFrame *df, void*param)
 		first_display = false;
 		moveWindow("DepthFrame", 100, 100);
 	}
+
 	// wait key to give window to update content
     cvWaitKey(1);
 }
@@ -95,33 +96,35 @@ int main(int argc, char **argv)
 		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
 
 		// should open cmd port first
-		cmd_port.Open(cmd_port_name);
-
-		//std::string status;
-		//cmd_port.GetSystemStatus(status);
-		//cout << status << endl;
+		if (!cmd_port.Open(cmd_port_name))
+			return -1;
 
 		// setup depth data call back
 		uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
 
-		// open camera@
-		if (uvc_port.Open(camera_list[0])) {
+		if (!uvc_port.Open(camera_list[0]))
+			return -1;
 
-			//cout << "set hdr ratio 2 result: " << cmd_port.SetHdrRatio(0) << endl;
 
-			//cout << "intg time result: " << cmd_port.SetIntegrationTime(60) << endl;
+		// config the camera
+		//cout << "set hdr ratio 2 result: " << cmd_port.SetHdrRatio(0) << endl;
 
-			//cout << "calibration result: " << cmd_port.Calibration(1900) << endl;
+		//cout << "intg time result: " << cmd_port.SetIntegrationTime(60) << endl;
 
-			//cout << "save config result: " << cmd_port.SaveConfig() << endl;
+		//cout << "calibration result: " << cmd_port.Calibration(1900) << endl;
 
-			//cout << "set hdr ratio 2 result: " << cmd_port.SetHdrRatio(2) << endl;
+		//cout << "save config result: " << cmd_port.SaveConfig() << endl;
 
-			uvc_port.SetHdrMode(true);
-		}		
+		//cout << "set hdr ratio 2 result: " << cmd_port.SetHdrRatio(2) << endl;
+
+		//cout << uvc_port.SetHdrMode(true);
 
 		// upgrade firmware
 		if (cmd_port.IsOpened()) {
+
+			//std::string status;
+			//cmd_port.GetSystemStatus(status);
+			//cout << status << endl;
 
 			//if (cmd_port.StartUpgrade("d:\\depth_sensor_opt8241.ifw", "app") == false) {
 			//	cout << "Start upgrade file failed, please check the file is avilable.";
@@ -141,14 +144,14 @@ int main(int argc, char **argv)
 		}
 	}
 
-	// Grabber 10 seconds frame
-	this_thread::sleep_for(chrono::seconds(1000));
+	// Grabber 100 seconds frame
+	this_thread::sleep_for(chrono::seconds(100));
 
 	cout << "close uvc port" << endl;
 	uvc_port.Close();
 
-	//cout << "close cmd port" << endl;
-	//cmd_port.Close();
+	cout << "close cmd port" << endl;
+	cmd_port.Close();
 
 	cout << "app shutdown" << endl;
 	return 0;

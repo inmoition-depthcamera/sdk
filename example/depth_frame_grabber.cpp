@@ -39,40 +39,39 @@ int main(int argc, char **argv)
 	std::vector<std::string> camera_list;
 	string cmd_port_name;
 
+	// get the valid camera names
 	uvc_port.GetDepthCameraList(camera_list);
 	for(auto name : camera_list){
 		cout << name << endl;
 	}
 
     if(camera_list.size() > 0){
-
 		// get uvc relate cmd port(ttyACMx)
-		cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name);
+		if (cmd_port.GetUvcRelatedCmdPort(camera_list[0], cmd_port_name)) {
+			// should open cmd port first
+			if (cmd_port.Open(cmd_port_name)) {
+				// setup depth data call back
+				uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
+				// open first camera			
+				if (uvc_port.Open(camera_list[0])) {
+					// get the camera status information
+					std::string status;
+					cmd_port.GetSystemStatus(status);
+					cout << status << endl;
 
-		// should open cmd port first
-		cmd_port.Open(cmd_port_name);
+					// Grabber 10 seconds frame
+					this_thread::sleep_for(chrono::seconds(10));
 
-		std::string status;
-		cmd_port.GetSystemStatus(status);
+					cout << "close uvc port" << endl;
+					uvc_port.Close();
+				}
 
-		cout << status << endl;
-
-		// setup depth data call back
-		uvc_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
-
-		// open camera
-		uvc_port.Open(camera_list[0]);
+				cout << "close cmd port" << endl;
+				cmd_port.Close();
+			}
+		}
+		
 	}
-
-	// Grabber 10 seconds frame
-	this_thread::sleep_for(chrono::seconds(10));
-
-	cout << "close uvc port" << endl;
-	uvc_port.Close();
-
-	cout << "close cmd port" << endl;
-	cmd_port.Close();
-
 	cout << "app shutdown" << endl;
 	return 0;
 }
