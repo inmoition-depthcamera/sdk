@@ -30,6 +30,7 @@ Linux 系统中，依赖如下库：
 - OpenGL
 - glfw3
 - OpenCV
+- libcurses (For linux only)
 
 ## 编译方法 Buld
 

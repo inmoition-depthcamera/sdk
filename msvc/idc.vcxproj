@@ -31,6 +31,7 @@
     <ClInclude Include="..\source\os\uvc_interface_direct_show.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="ClassDiagram.cd" />
     <None Include="ClassDiagram1.cd" />
   </ItemGroup>

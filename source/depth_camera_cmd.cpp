@@ -187,9 +187,10 @@ bool DepthCameraCmdPort::GetDepthScale(float & scale)
 	if (res_len > 0) {
 		response_buf[res_len] = 0;
 		char * str = strstr((char*)response_buf, "scale: ");
-		char * endstr = strstr((char*)response_buf, "\r\nidcs>");
+		char * endstr = strstr((char*)response_buf, "\nsuccess ->");
 		if (endstr) *endstr = 0;
 		if (str) {
+			str += strlen("scale: ");
 			scale = strtof(str, NULL);
 			return (scale == 0) ? false : true;
 		}

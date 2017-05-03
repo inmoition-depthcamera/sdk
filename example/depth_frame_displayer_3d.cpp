@@ -119,8 +119,8 @@ static void DrawAllViews(DepthFrame *df, DepthCameraUvcPort *uvc) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 64);
-	int32_t cloud_points_count = uvc->DepthToPointCloud(filted_phase, df->w, df->h, cloud_points, 3.5f / 3072.0f);
-	//int32_t cloud_points_count = uvc->DepthToPointCloud(df, cloud_points, 2 / 3072.0f);
+	int32_t cloud_points_count = uvc->DepthToPointCloud(filted_phase, df->w, df->h, cloud_points, 1.0f / 20);
+	//int32_t cloud_points_count = uvc->DepthToPointCloud(df, cloud_points, 1.0f / 20.0f);
 	glPointSize(1.0f);
 	glColor3f(1.0, 1.0, 1.0);
 	glPushMatrix();
@@ -241,6 +241,8 @@ int main(int argc, char **argv)
 		std::string status;
 		cmd_port.GetSystemStatus(status);
 		cout << status << endl;
+
+		cmd_port.GetDepthScale(Scale);
 	} else {
 		cout << "Can't Find Inmotion Depth Camera" << endl;
 		return -1;
