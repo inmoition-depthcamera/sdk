@@ -50,7 +50,7 @@ Linux 系统中，依赖如下库：
 
 > 注意：编译工具链需要支持`c++ 11`。 Note: The compilation toolchain needs to support `c++ 11`
 
-## 用法
+## 用法 Usage
 - 包含对应的头文件 `depth_camera_uvc.h` 与 `depth_camera_cmd.h`。 Contains the corresponding header file `depth_camera_uvc.h` and` depth_camera_cmd.h`.
 - 调用 `DepthCameraUvcPort::GetDepthCameraList` 来获得系统中所连接的深度摄像头。 Call `DepthCameraUvcPort::GetDepthCameraList` to get the depth cameras connected to the system.
 - 调用 `DepthCameraCmdPort::GetUvcRelatedCmdPort` 来获取深度摄像头的命令端口名称。 Call `DepthCameraCmdPort::GetUvcRelatedCmdPort` to get the name of the command port for given depth camera name.
@@ -63,7 +63,7 @@ Linux 系统中，依赖如下库：
 - 调用 `DepthCameraUvcPort::Close` 来关闭UVC数据流接口。 Call `DepthCameraUvcPort::Close` to close the UVC data flow interface.
 - 调用 `DepthCameraCmdPort::Close` 来关闭命令接口。Call `DepthCameraCmdPort::Close` to close the command interface.
 
-## 深度数据帧
+## 深度数据帧 Depth Frame
 
 在SDK中，一个深度帧，用如下类表示： In the SDK, a depth frame is represented by the following class:
 
