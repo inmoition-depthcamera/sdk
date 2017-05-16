@@ -16,7 +16,7 @@
     <ClCompile Include="..\example\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\example\full_example.cpp" />
     <ClCompile Include="..\example\imgui\VeraMono_font.cpp" />
-    <ClCompile Include="points_cloud.cpp" />
+    <ClCompile Include="..\example\points_cloud.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\example\imgui\imconfig.h" />
