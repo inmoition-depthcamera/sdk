@@ -216,6 +216,7 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 	int fw, fh;
 	static float *cloud_points = NULL;
 	static uint16_t *filted_phase = NULL;
+	static bool filter_init = false;
 
 	int32_t frame_size = df->w * df->h;
 
@@ -229,8 +230,19 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 
 	pc_size_callback(window, fw, fh);
 
+#ifdef _DEBUG
 	uvc->ToPointsCloud(df, cloud_points, Scale * scale);
+#else // use filter to denoise
 
+	if (filter_init == false) {
+		DepthCameraDenoiseFilter.Init(df->w, df->h);
+		filter_init = true;
+	}
+	
+	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 8);
+	uvc->ToPointsCloud(filted_phase, df->w, df->h,  cloud_points, Scale * scale);
+
+#endif
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
 	glPushMatrix();

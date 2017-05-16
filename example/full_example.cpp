@@ -2,7 +2,6 @@
 
 #include <depth_camera_cmd.h>
 #include <depth_camera_uvc.h>
-#include <denoise_filter.h>
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include <imgui.h>
@@ -312,7 +311,6 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 										CurrentUvcName = full_name;
 										// get camera infomatrions
 										cmd->GetDepthScale(DepthScale);
-										cout << "Phase to depth factor: " << DepthScale << endl;
 									}else {
 										cout << "Open Uvc port failed!" << endl;
 										cout << "Will close the cmd port" << endl;
