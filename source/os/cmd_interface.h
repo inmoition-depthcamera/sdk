@@ -28,12 +28,12 @@ public:
 	int32_t SendCmd(const char * read_buffer, int32_t size);
 	int32_t SendCmdAndWaitResponse(const char *cmd_buffer, int32_t cmd_buffer_len, int32_t timeout, char *res_buffer, int32_t res_buf_len);
 
-	int32_t SetRxDataCallBack(std::function<void(unsigned char *, int, void *)> cb, void *param);
+	int32_t SetRxDataCallBack(std::function<void(const uint8_t *, int32_t, void *)> cb, void *param);
 
 protected:
 	string mPortName;
 
-	std::function<void(unsigned char *, int, void *)> mRxCallBack;
+	std::function<void(const uint8_t *, int32_t, void *)> mRxCallBack;
     void *mRxCallBackParam;
     std::thread *mRxThread;
     static void mRxThreadProc(void *param);

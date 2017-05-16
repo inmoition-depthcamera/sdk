@@ -59,7 +59,8 @@ bool CmdInterfaceWin::Open(string &port_name)
 		dcb.ByteSize = 8;
 		dcb.Parity = NOPARITY;
 		dcb.StopBits = ONESTOPBIT;
-		dcb.fRtsControl = 1; // use rts control to notify usb serial port open and close event
+		dcb.fRtsControl = 0; 
+		dcb.fDtrControl = 1;// use dtr control to notify usb serial port open and close event
 		if (SetCommState(mComHandle, &dcb) == 0) {
 			CloseHandle(mComHandle);
 			return false;
@@ -80,6 +81,9 @@ bool CmdInterfaceWin::Open(string &port_name)
 
 bool CmdInterfaceWin::Close()
 {
+	if (!IsOpened())
+		return true;
+
 	mRxThreadExitFlag = true;
 	mIsOpened = false;
 

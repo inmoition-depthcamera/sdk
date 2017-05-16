@@ -40,3 +40,8 @@ msvc/inmotion-depth-camera-sdk/Release/
 *.user
 
 msvc/obj/
+doc/
+*.cd
+obj/
+*.ini
+*.ttf

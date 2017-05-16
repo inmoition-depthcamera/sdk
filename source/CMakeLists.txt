@@ -17,11 +17,12 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     file(GLOB_RECURSE SRC_LIST
         "${SRCDIR}/depth_camera_cmd.cpp"
         "${SRCDIR}/depth_camera_uvc.cpp"
+        "${SRCDIR}/depth_frame.cpp"
         "${SRCDIR}/filter/*.cpp"
         "${SRCDIR}/os/cmd_interface.cpp"
         "${SRCDIR}/os/cmd_interface_linux.cpp"
-        "${SRCDIR}/os/uvc_interface_v4l.cpp"
-        "${SRCDIR}/os/uvc_interface.cpp")
+        "${SRCDIR}/os/uvc_interface.cpp"
+        "${SRCDIR}/os/uvc_interface_v4l.cpp")
         
     ADD_LIBRARY(${SDK_NAME}_shared SHARED ${SRC_LIST})
     ADD_LIBRARY(${SDK_NAME}_static STATIC ${SRC_LIST})
@@ -43,10 +44,11 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     file(GLOB_RECURSE SRC_LIST
         "${SRCDIR}/depth_camera_cmd.cpp"
         "${SRCDIR}/depth_camera_uvc.cpp"
+        "${SRCDIR}/depth_frame.cpp"
         "${SRCDIR}/filter/*.cpp"
         "${SRCDIR}/os/cmd_interface.cpp"
-        "${SRCDIR}/os/uvc_interface.cpp"
         "${SRCDIR}/os/cmd_interface_win.cpp"
+        "${SRCDIR}/os/uvc_interface.cpp"        
         "${SRCDIR}/os/uvc_interface_direct_show.cpp")
 
     ADD_LIBRARY(${SDK_NAME}_shared SHARED ${SRC_LIST})

@@ -1,6 +1,5 @@
 #include "depth_camera_uvc.h"
 #include "math.h"
-#include "string.h"
 
 DepthCameraUvcPort::DepthCameraUvcPort()
 {
@@ -75,7 +74,7 @@ bool DepthCameraUvcPort::Open(std::string &camera_name)
 			mHFocal = mWFocal = 3.6f / 0.015f;  // Focal Length 3.6mm / pixel size 0.015mm
 		}
 		else if (camera_name.find("IDC3224L") != string::npos){
-			mHFocal = mWFocal = 2.3f / 0.015f;  // Focal Length 2.3mm / pixel size 0.015mm
+			mHFocal = mWFocal = 3.6f / 0.015f;  // Focal Length 3.6mm / pixel size 0.015mm
 		}
 		else {
 			mHFocal = mWFocal = 247.0f;
@@ -121,10 +120,12 @@ bool DepthCameraUvcPort::GetDepthFrame(DepthFrame *df)
 		return false;
 	
 	mHasNewFrame = false;
-	return mDepthFrame->CopyTo(df);
+
+	bool ret = mHdrMode ? mHdrDepthFrame->CopyTo(df) : mDepthFrame->CopyTo(df);
+	return ret;
 }
 
-int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * point_clould, float scale)
+int32_t DepthCameraUvcPort::ToPointsCloud(const DepthFrame *df, float * point_clould, float scale)
 {
 	const uint16_t* p_buf = df->phase;
 
@@ -148,7 +149,7 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const DepthFrame *df, float * poin
 	return totalPoint;
 }
 
-int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t *phase, int32_t w, int32_t h, float * point_clould, float scale)
+int32_t DepthCameraUvcPort::ToPointsCloud(const uint16_t *phase, int32_t w, int32_t h, float * point_clould, float scale)
 {
 	const uint16_t* p_buf = phase;
 	float *table = mD2PTable;
@@ -169,7 +170,7 @@ int32_t DepthCameraUvcPort::DepthToPointCloud(const uint16_t *phase, int32_t w, 
 	return totalPoint;
 }
 
-int32_t DepthCameraUvcPort::DepthToFiltedPointCloud(const DepthFrame *df, float * point_clould, float scale, uint16_t phaseMax, uint16_t amplitudeMin)
+int32_t DepthCameraUvcPort::ToFiltedPointsCloud(const DepthFrame *df, float * point_clould, float scale, uint16_t phaseMax, uint16_t amplitudeMin)
 {
 	const uint16_t* p_buf = df->phase;
 	const uint16_t* a_buf = df->amplitude;
@@ -290,47 +291,3 @@ void DepthCameraUvcPort::SetHdrMode(bool enable)
 	mHdrMode = enable;
 }
 
-
-
-////////// DepthFrame Class /////////////
-DepthFrame::DepthFrame(int32_t _w, int32_t _h)
-{
-	w = _w;
-	h = _h;
-	phase     = new uint16_t[w * h];
-	amplitude = new uint16_t[w * h];
-	ambient   = new uint8_t[w * h];
-	flags     = new uint8_t[w * h];
-}
-
-DepthFrame::~DepthFrame()
-{
-	delete[] phase;
-	delete[] amplitude;
-	delete[] ambient;
-	delete[] flags;
-}
-
-bool DepthFrame::CopyFrom(DepthFrame *df)
-{
-	if(!df || df->w != w || df->h != h)
-		return false;
-	int size = w * h;
-	if (df->phase)     memcpy(phase,     df->phase,      size * sizeof(uint16_t));
-	if (df->amplitude) memcpy(amplitude, df->amplitude,  size * sizeof(uint16_t));
-	if (df->ambient)   memcpy(ambient,   df->ambient,    size * sizeof(uint8_t));
-	if (df->flags)     memcpy(flags,     df->flags,      size * sizeof(uint8_t));
-	return true;
-}
-
-bool DepthFrame::CopyTo(DepthFrame *df)
-{
-	if(!df || df->w != w || df->h != h)
-		return false;
-	int size = w * h;
-	if (df->phase)     memcpy(df->phase,     phase,      size * sizeof(uint16_t));
-	if (df->amplitude) memcpy(df->amplitude, amplitude,  size * sizeof(uint16_t));
-	if (df->ambient)   memcpy(df->ambient,   ambient,    size * sizeof(uint8_t));
-	if (df->flags)     memcpy(df->flags,     flags,      size * sizeof(uint8_t));
-	return true;
-}

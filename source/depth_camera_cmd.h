@@ -67,6 +67,10 @@ public:
 	/// @return Return the detail progrss in percent(0~100)
     int32_t GetUpgradeProgress();
 
+	/// @brief Get Upgrade progress
+	/// @return Return the detail progrss in percent(0~100)
+	int32_t IsUpgradeing();
+
 	/// @brief Set the integration time of camera
 	/// @param value The intgration time of camera in percent(0~100)
 	/// @return Return ture if successed

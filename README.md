@@ -29,8 +29,6 @@ Linux 系统中，依赖如下库：
 ### 例子程序 Examples Dependences
 - OpenGL
 - glfw3
-- OpenCV
-- libcurses (For linux only)
 
 ## 编译方法 Buld
 
@@ -71,17 +69,32 @@ Linux 系统中，依赖如下库：
 ````
 class DepthFrame{
 public:
-    int32_t w;           /// The Width of the depth frame
-    int32_t h;           /// The Heigth of the depth frame 
-    uint16_t *phase;     /// The Phase of the depth frame (distance = phase * K). Only low 12 bits has been used.
-    uint16_t *amplitude; /// The amplitude of each pixel. Only low 12 bits is used. (Some camera's low 4 bits is zero).
-    uint8_t *ambient;    /// The ambient of each pixel. Only low 3 Bits has been used.
-    uint8_t *flags;      /// The over explote flag of each pixel. Only low 1 bit has been used.
+	int32_t w;            /// The Width of the depth frame
+	int32_t h;            /// The Heigth of the depth frame 
+	uint16_t *phase;      /// The Phase of the depth frame (distance = phase * K). Only low 12 bits has been used.
+	uint16_t *amplitude;  /// The amplitude of each pixel. Only low 12 bits is used. (Some camera's low 4 bits is zero).
+	uint8_t *ambient;     /// The ambient of each pixel. Only low 3 Bits has been used.
+	uint8_t *flags;       /// The over explote flag of each pixel. Only low 1 bit has been used.
+	bool amplitude_8bits; /// If the amplitude is only high 8bits.
 
 	DepthFrame(int32_t _w, int32_t _h);
 	~DepthFrame();
+
+	/// @brief Copy frame data to given frame
 	bool CopyTo(DepthFrame *df);
-	bool CopyFrom(DepthFrame *df);
+	/// @brief Copy frame data from given frame
+	bool CopyFrom(const DepthFrame *df);
+	/// @brief Copy frame data from given frame
+	DepthFrame & operator=(const DepthFrame &from) { this->CopyFrom(&from); return *this; }
+	/// @brief Calculate SUM of given rect from frame
+	uint32_t CalcRectSum(int32_t phase_or_amplitude, int32_t x, int32_t y, int32_t _w, int32_t _h);
+	/// @brief Calculate SUM of given center rect from frame
+	uint32_t CalcCenterRectSum(int32_t phase_or_amplitude, int32_t _w, int32_t _h);
+	/// @brief Convent all depth info to a rgb24 buffer
+	bool ToRgb24(uint8_t *rgb24_buf, int32_t rgb24_buf_size);
+	/// @brief Calculate Histogram of the frame
+	template<typename T>
+	inline T CalcHistogram(int32_t phase_or_amplitude, T *histogram_buf, int32_t max);
 };
 ````
 
@@ -107,13 +120,14 @@ public:
 - **SaveConfig** Save modified settings to internal FLASH.
 - **GetSystemStatus** Get current status information of depth camera.
 - **RestoreFactorySettings** Restore depth camera setting to factory setting.
-- **StartUpgrade** Start Upgrade the depth camera's firmware.
+- **StartUpgrade** Start upgrade the depth camera's firmware.
 - **StopUpgrade** Stop the upgrading process.
-- **GetUpgradeProgress** Get Upgrade progress.
+- **GetUpgradeProgress** Get upgrade progress.
+- **IsUpgrading** Get upgrade status.
 
 > 上述接口函数的用法，请参考`depth_camera_cmd.h`文件中的注释。 Refer to the comments in the `depth_camera_cmd.h` file for usage of the above interface functions.
 
-## 例子程序 Simple example to grabber frame data from depth camra
+## 例子程序 Simple example to grabber frame data from depth camera
 
 ````
 #include <depth_camera_cmd.h>
@@ -190,6 +204,5 @@ int main(int argc, char **argv)
 }
 ````
 
-Email: ggh@imscv.com
-
+Email: ggh@imscv.com<br>
 Websit: http://robot.imscv.com/

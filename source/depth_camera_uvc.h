@@ -7,25 +7,10 @@
 #include <string>
 #include <functional>
 #include <mutex>
-
+#include "depth_frame.h"
 
 using namespace std;
 
-/// @brief Depth Frame structure to store depth data.
-class DepthFrame{
-public:
-	int32_t w;           /// The Width of the depth frame
-	int32_t h;           /// The Heigth of the depth frame 
-	uint16_t *phase;     /// The Phase of the depth frame (distance = phase * K). Only low 12 bits has been used.
-	uint16_t *amplitude; /// The amplitude of each pixel. Only low 12 bits is used. (Some camera's low 4 bits is zero).
-	uint8_t *ambient;    /// The ambient of each pixel. Only low 3 Bits has been used.
-	uint8_t *flags;      /// The over explote flag of each pixel. Only low 1 bit has been used.
-
-	DepthFrame(int32_t _w, int32_t _h);
-	~DepthFrame();
-	bool CopyTo(DepthFrame *df);
-	bool CopyFrom(DepthFrame *df);
-};
 
 #if defined _MSC_VER 
     #include "os/uvc_interface_direct_show.h"
@@ -81,7 +66,7 @@ public:
 	/// @param point_cloud The output point cloud buffer. The buffer size should be 3 * width * height
 	/// @param scale The scale of point_cloud points. This value can come from DepthCameraCmdPort.GetDepthScale function.
 	/// @return Return the points in the points cloud array( = w * h);
-    int32_t DepthToPointCloud(const DepthFrame *df, float *point_clould, float scale = 1.0f);
+    int32_t ToPointsCloud(const DepthFrame *df, float *point_clould, float scale = 1.0f);
 
 	/// @brief Converting depth data into 3D point cloud data with given phase and size
 	/// @param phase The phase buffer. The size of phase buffer should be width * height.
@@ -90,7 +75,7 @@ public:
 	/// @param point_cloud The output point cloud buffer. The buffer size should be 3 * width * height  (phase to x y z)
 	/// @param scale The scale of point_cloud points. This value can come from DepthCameraCmdPort.GetDepthScale function.
 	/// @return Return the points in the points cloud array( = w * h);
-	int32_t DepthToPointCloud(const uint16_t *phase, int32_t w, int32_t h, float * point_clould, float scale = 1.0f);
+	int32_t ToPointsCloud(const uint16_t *phase, int32_t w, int32_t h, float * point_clould, float scale = 1.0f);
 
 	/// @brief Converting depth data into 3D point cloud data with simple filter
 	/// @param df The depth camera frame buffer.
@@ -99,8 +84,8 @@ public:
 	/// @param phase_max The max valid phase value. The value more than phase_max will been ignored.
 	/// @param amplitude_min The min valid amplitude value. The value less than amplitude_min will been ignored.
 	/// @return Return the points in the points cloud array( = w * h);
-    int32_t DepthToFiltedPointCloud(const DepthFrame *df, float *point_clould, float scale = 1.0f, uint16_t phase_max = 3072, uint16_t amplitude_min = 64);
-	
+    int32_t ToFiltedPointsCloud(const DepthFrame *df, float *point_clould, float scale = 1.0f, uint16_t phase_max = 3072, uint16_t amplitude_min = 64);
+
 	/// @brief Get the width of a depth frame
 	/// @return Return the width of a depth frame
 	virtual int32_t GetWidth() { return mDepthFrame ? mDepthFrame->w : -1; }
@@ -130,3 +115,4 @@ private:
 };
 
 #endif
+

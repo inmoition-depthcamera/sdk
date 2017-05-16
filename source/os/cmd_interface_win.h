@@ -11,7 +11,6 @@ public:
 	CmdInterfaceWin();
 	~CmdInterfaceWin();
 
-	// Inherited via CmdInterface
 	/// @brief Open cmd port with given name
 	/// 
 	/// The port name can be found by GetDepthCameraList and GetUvcRelatedCmdPort function.

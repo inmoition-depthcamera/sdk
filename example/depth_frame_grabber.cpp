@@ -6,7 +6,7 @@
 
 using namespace std;
 using namespace chrono;
-
+// 这是一个测试
 void OnDepthFrame(const DepthFrame *df, void*param){
 
 	static auto last_time = system_clock::now();
@@ -65,12 +65,10 @@ int main(int argc, char **argv)
 					cout << "close uvc port" << endl;
 					uvc_port.Close();
 				}
-
 				cout << "close cmd port" << endl;
 				cmd_port.Close();
 			}
 		}
-		
 	}
 	cout << "app shutdown" << endl;
 	return 0;

@@ -6,7 +6,8 @@ SET(PROJECT_NAME inmotion_depth_camera_sdk)
 # define project will set CMAKE_CXX_FLAGS to NULL
 PROJECT (${PROJECT_NAME})
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/source
+INCLUDE_DIRECTORIES(
+    ${PROJECT_SOURCE_DIR}/source
     ${PROJECT_SOURCE_DIR}/source/os
     ${PROJECT_SOURCE_DIR}/source/filter
 )

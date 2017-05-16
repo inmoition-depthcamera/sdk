@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\depth_camera_cmd.cpp" />
     <ClCompile Include="..\source\depth_camera_uvc.cpp" />
+    <ClCompile Include="..\source\depth_frame.cpp" />
     <ClCompile Include="..\source\filter\denoise_filter.cpp" />
     <ClCompile Include="..\source\filter\matrix.cpp" />
     <ClCompile Include="..\source\os\cmd_interface.cpp" />
@@ -23,6 +24,7 @@
   <ItemGroup>
     <ClInclude Include="..\source\depth_camera_cmd.h" />
     <ClInclude Include="..\source\depth_camera_uvc.h" />
+    <ClInclude Include="..\source\depth_frame.h" />
     <ClInclude Include="..\source\filter\denoise_filter.h" />
     <ClInclude Include="..\source\filter\matrix.h" />
     <ClInclude Include="..\source\os\cmd_interface.h" />
@@ -32,8 +34,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="ClassDiagram.cd" />
-    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -58,7 +58,7 @@ int32_t CmdInterface::SendCmdAndWaitResponse(const char * cmd_buf, int32_t cmd_l
 	return -1;
 }
 
-int32_t CmdInterface::SetRxDataCallBack(std::function<void(unsigned char *, int, void *)> cb, void * param)
+int32_t CmdInterface::SetRxDataCallBack(std::function<void(const uint8_t*, int32_t, void *)> cb, void * param)
 {
 	mRxCallBack = cb;
 	mRxCallBackParam = param;

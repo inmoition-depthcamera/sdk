@@ -63,6 +63,9 @@ bool CmdInterfaceLinux::Open(string & port_name)
 
 bool CmdInterfaceLinux::Close()
 {
+	if(mIsOpened == false)
+		return true;
+
 	mRxThreadExitFlag = true;
 
     if (mComHandle != -1) {

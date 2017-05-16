@@ -76,6 +76,9 @@ error:
 
 bool UvcInterfaceV4L::Close()
 {
+	if(mIsOpened == false)
+		return true;
+
 	mReadFrameThreadExitFlag = true;
 
 	if (mIsOpened)

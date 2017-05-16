@@ -54,6 +54,7 @@ bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name, string type)
 		int32_t cmd_str_len = sprintf(cmd_str, "fwu %s erase\r\n", type.c_str());
 		if(SendCmdAndWaitResult(cmd_str, cmd_str_len, "success ->", 10000) == false){
 			mUpgradeProgress = -2;
+			mIsUpgrading = false;
 			return false;
 		}
 
@@ -96,6 +97,7 @@ bool DepthCameraCmdPort::StartUpgrade(string firmware_file_name, string type)
 		cmd_str_len = sprintf(cmd_str, "fwu %s finish 0x%x 0x%x\r\n", type.c_str(), total_tx_len, file_crc);
 		if (SendCmdAndWaitResult(cmd_str, cmd_str_len, "success ->", 3000) == false) {
 			mUpgradeProgress = -5;
+			mIsUpgrading = false;
 			return false;
 		}
 
@@ -121,6 +123,11 @@ int32_t DepthCameraCmdPort::GetUpgradeProgress()
 	return mUpgradeProgress;
 }
 
+int32_t DepthCameraCmdPort::IsUpgradeing()
+{
+	return mIsUpgrading;
+}
+
 bool DepthCameraCmdPort::SetIntegrationTime(uint8_t value)
 {
 	char cmd[32];
@@ -131,7 +138,7 @@ bool DepthCameraCmdPort::SetIntegrationTime(uint8_t value)
 bool DepthCameraCmdPort::SetExternIlluminatePower(uint8_t value)
 {
 	char cmd[32];
-	int32_t len = snprintf(cmd, sizeof(cmd), "isl cd 0x%x\r\n", value);
+	int32_t len = snprintf(cmd, sizeof(cmd), "illum cd %d\r\n", value);
 	return SendCmdAndWaitResult(cmd, len, "success ->");
 }
 

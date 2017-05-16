@@ -228,6 +228,9 @@ bool UvcInterfaceDirectShow::Open(std::string &camera_name)
 
 bool UvcInterfaceDirectShow::Close()
 {
+	if (mIsOpened == false)
+		return true;
+
 	HRESULT HR = NOERROR;
 #define SAFE_CHECK_RELEASE(x) if(x){(x)->Release(); (x) = NULL;}
 
