@@ -41,6 +41,24 @@ Linux 系统中，依赖如下库：
 
 ### Linux
 - 确保所有依赖库都已经安装。 Make sure that all dependent libraries are already installed.
+- Install Dependences
+
+````
+sudo apt-get install kdelibs5-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libudev-dev
+````
+
+- Install glfw
+
+````
+git clone https://github.com/glfw/glfw.git
+cd glfw
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+````
+
 - cd `root_of_sdk_path`
 - mkdir build
 - cmake ..
