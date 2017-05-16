@@ -154,7 +154,7 @@ static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPor
 				cmd->StopUpgrade();
 			}ImGui::SameLine();
 			ShowHelpMarker("Mcu firmware will reload on next boot time"); ImGui::SameLine();
-			ImGui::Text(info_msg);
+			ImGui::Text("%s", info_msg);
 			
 		}
 		ImGui::End();
@@ -229,8 +229,8 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			ImGui::Separator();
 			for (int i = 0; i < IM_ARRAYSIZE(string_keys); i++)
 			{
-				ImGui::Text(string_keys[i]); ImGui::NextColumn();
-				ImGui::Text(string_values[i]->c_str()); ImGui::NextColumn();
+				ImGui::Text("%s", string_keys[i]); ImGui::NextColumn();
+				ImGui::Text("%s", string_values[i]->c_str()); ImGui::NextColumn();
 			}
 			ImGui::Columns(1);
 
@@ -246,7 +246,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 					static int32_t *int32_values[] = {&fps , &integration_time, &extern_illum_power,
 					                     &internal_illum_power , &hdr_ratio, &mirror};
 					while (getline(ss, line)) {
-						int pos;
+						uint32_t pos;
 						for (int i = 0; i < IM_ARRAYSIZE(int32_keys); i++) {
 							if ((pos = line.find(int32_keys[i])) != string::npos) {
 								string v = line.substr(pos + 2 + strlen(int32_keys[i]));

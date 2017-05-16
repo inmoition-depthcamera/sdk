@@ -14,7 +14,13 @@ endif()
 PROJECT (full_example)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
-ADD_EXECUTABLE(full_example full_example.cpp points_cloud.cpp)
+SET(FE_SRCDIR .)
+file(GLOB_RECURSE FE_SRC_LIST
+    "${FE_SRCDIR}/imgui/*.cpp"
+    "${FE_SRCDIR}/full_example.cpp"
+    "${FE_SRCDIR}/points_cloud.cpp")
+INCLUDE_DIRECTORIES(${FE_SRCDIR} ${FE_SRCDIR}/imgui)
+ADD_EXECUTABLE(full_example ${FE_SRC_LIST})
 TARGET_LINK_LIBRARIES(full_example idc glfw ${OPENGL_gl_LIBRARY} )
 
 if (UNIX)

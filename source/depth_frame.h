@@ -57,7 +57,7 @@ public:
 	template<typename T>
 	inline T CalcHistogram(int32_t phase_or_amplitude, T *histogram_buf, int32_t max){
 		const uint16_t * ptr = phase_or_amplitude ? amplitude : phase;
-		int32_t size = w * h, index = 0;
+		int32_t size = w * h;
 		T max_h = 0;
 		memset(histogram_buf, 0, sizeof(T) * max);
 		for (int i = 0; i < size; i++) {
@@ -71,7 +71,6 @@ public:
 		for (int32_t i = 0; i < max; i++) {
 			if (histogram_buf[i] > max_h) {
 				max_h = histogram_buf[i];
-				index = i;
 			}				
 		}
 		return max_h;

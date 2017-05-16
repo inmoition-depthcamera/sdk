@@ -216,7 +216,6 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 	int fw, fh;
 	static float *cloud_points = NULL;
 	static uint16_t *filted_phase = NULL;
-	static bool reshape_flag = false;
 
 	int32_t frame_size = df->w * df->h;
 
@@ -230,7 +229,7 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 
 	pc_size_callback(window, fw, fh);
 
-	int32_t cloud_points_count = uvc->ToPointsCloud(df, cloud_points, Scale * scale);
+	uvc->ToPointsCloud(df, cloud_points, Scale * scale);
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
 	glPushMatrix();
