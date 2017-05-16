@@ -246,7 +246,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 					static int32_t *int32_values[] = {&fps , &integration_time, &extern_illum_power,
 					                     &internal_illum_power , &hdr_ratio, &mirror};
 					while (getline(ss, line)) {
-						uint32_t pos;
+						unsigned long pos;
 						for (int i = 0; i < IM_ARRAYSIZE(int32_keys); i++) {
 							if ((pos = line.find(int32_keys[i])) != string::npos) {
 								string v = line.substr(pos + 2 + strlen(int32_keys[i]));

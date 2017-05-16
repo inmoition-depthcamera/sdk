@@ -230,6 +230,7 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 	pc_size_callback(window, fw, fh);
 
 	uvc->ToPointsCloud(df, cloud_points, Scale * scale);
+
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
 	glPushMatrix();
