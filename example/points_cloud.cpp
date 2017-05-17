@@ -3,6 +3,7 @@
 #include <denoise_filter.h>
 #include <GLFW/glfw3.h>
 
+#define ENABLE_DINOISE_FILTER 1
 
 GLFWwindow* PointsCloudWnd = NULL;
 
@@ -10,7 +11,7 @@ bool MouseDownFlag = false, ShowHideFlag = false;
 double LastMousePosX, LastMousePosY;
 DenoiseFilter DepthCameraDenoiseFilter;
 
-float Rotates[3] = { 0 , 0, 0 }, Scale = 5.0f, ObjPos[3] = { 0, 0, 0 };
+float Rotates[3] = { 0 , 0, 0 }, Scale = 3.0f, ObjPos[3] = { 0, 0, 0 };
 
 static void DrawCone(float h, float r)
 {
@@ -162,18 +163,19 @@ static void pc_scroll_callback(GLFWwindow* window, double xoffset, double yoffse
 	Scale *= yoffset > 0 ? 1.01f : 0.99f;
 }
 
-static void pc_size_callback(GLFWwindow* window, int width, int height)
+static void pc_size_callback(GLFWwindow* window, int width, int height, float max_range)
 {
+	max_range *= 2;
 	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	if (width <= height) {
 		float factor = (GLfloat)height / (GLfloat)width;
-		glOrtho(-10.0f, 10.0f, -10.0f * factor, 10.0f * factor, -20.0f, 20.0f);
+		glOrtho(-max_range, max_range, -max_range * factor, max_range * factor, -max_range, max_range);
 	}
 	else {
 		float factor = (GLfloat)width / (GLfloat)height;
-		glOrtho(-10.0f * factor, 10.0f * factor, -10.0f, 10.0f, -20.0f, 20.0f);
+		glOrtho(-max_range * factor, max_range * factor, -max_range, max_range, -max_range, max_range);
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -211,7 +213,7 @@ static void pc_close_callback(GLFWwindow* window)
 	glfwHideWindow(PointsCloudWnd);
 }
 
-static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcPort *uvc, float scale)
+static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcPort *uvc, float scale, float max_range)
 {
 	int fw, fh;
 	static float *cloud_points = NULL;
@@ -228,21 +230,20 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 
 	glfwGetFramebufferSize(window, &fw, &fh);
 
-	pc_size_callback(window, fw, fh);
+	pc_size_callback(window, fw, fh, max_range);
 
-#ifdef _DEBUG
-	uvc->ToPointsCloud(df, cloud_points, Scale * scale);
-#else // use filter to denoise
-
+	// use filter to denoise
+#if ENABLE_DINOISE_FILTER
 	if (filter_init == false) {
 		DepthCameraDenoiseFilter.Init(df->w, df->h);
 		filter_init = true;
 	}
-	
 	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 8);
-	uvc->ToPointsCloud(filted_phase, df->w, df->h,  cloud_points, Scale * scale);
-
+	uvc->ToPointsCloud(filted_phase, df->w, df->h, cloud_points, Scale * scale);
+#else 
+	uvc->ToPointsCloud(df, cloud_points, Scale * scale);
 #endif
+
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
 	glPushMatrix();
@@ -302,7 +303,7 @@ bool InitPointsCloudWindow(int32_t w, int32_t h) {
 	return true;
 }
 
-void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale) {
+void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale, float max_range) {
 	static bool last_show_hide = false;
 	if (last_show_hide != *show_hide) {
 		if (*show_hide)
@@ -317,7 +318,7 @@ void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFram
 		glfwMakeContextCurrent(PointsCloudWnd);
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		DrawPointsCloud(PointsCloudWnd, df, uvc, scale);
+		DrawPointsCloud(PointsCloudWnd, df, uvc, scale, max_range);
 		glfwSwapBuffers(PointsCloudWnd);
 	}
 }

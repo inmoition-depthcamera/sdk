@@ -22,12 +22,12 @@ GLFWwindow* MainWnd;
 bool ShowPointsCloudFlag = false, ShowStaticsFlag = false;
 bool ShowFirmareUpgradeFlag = false, ShowConfigFlag = false;
 
-float DepthScale = 7.5f / 3072;
+float DepthScale = 7.5f / 3072, MaxRange = 7.5f;
 int32_t MainMenuHeight = 20;
 string CurrentUvcName;
 
 bool InitPointsCloudWindow(int32_t w, int32_t h);
-void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale);
+void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale, float max_range);
 
 static void ShowHelpMarker(const char* desc)
 {
@@ -73,7 +73,7 @@ static void DrawDepthFrame(DepthFrame *df, DepthCameraUvcPort *uvc) {
 	glDrawPixels(df->w * 2, df->h * 2, GL_RGB, GL_UNSIGNED_BYTE, rgb_buf);
 
 	// Draw Grid
-	glColor3f(1.0, 0.0, 0.0);
+	glColor3f(72.0f / 255.0f, 72.0f / 255.0f, 120.0f / 255.0f);
 	glLineWidth(1);
 	glBegin(GL_LINES);
 	glVertex2f(-1.0, 0);
@@ -127,9 +127,12 @@ static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPor
 		last_upgrade_status = cmd->IsUpgradeing();
 		ImVec2 wnd_size = ImVec2(512, 0);
 		if (ImGui::Begin("Firmware upgrade", &ShowFirmareUpgradeFlag, wnd_size, -1.0f, ImGuiWindowFlags_NoResize)) {
-			ImGui::Text("Please input the firmware file path:"); 
-			ImGui::InputText("(*.ifw|*.tie)", firmware_file_name, IM_ARRAYSIZE(firmware_file_name)); ImGui::SameLine();
+			ImGui::Text("Please input the firmware file path(*.ifw|*.tie):"); 			
+			ImGui::SameLine();
 			ShowHelpMarker("*.ifw is the MCU firmware file\n*.tie is the TOF firmware file");
+			ImGui::PushItemWidth(-1);
+			ImGui::InputText("Firmware File Name", firmware_file_name, IM_ARRAYSIZE(firmware_file_name)); 
+			ImGui::PopItemWidth();
 			ImGui::ProgressBar(upgrade_progress, ImVec2(-1.0f, 0.0f));
 			ImGui::Separator();
 			if (cmd->IsUpgradeing() == false && ImGui::Button("Start Upgrade")) {
@@ -152,7 +155,7 @@ static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPor
 			if (cmd->IsUpgradeing() && ImGui::Button("Stop Upgrade")) {
 				cmd->StopUpgrade();
 			}ImGui::SameLine();
-			ShowHelpMarker("Mcu firmware will reload on next boot time"); ImGui::SameLine();
+			ShowHelpMarker("Mcu firmware will reload on next boot time.\nUpgrade progress will stop current video stream, and reopen after finished."); ImGui::SameLine();
 			ImGui::Text("%s", info_msg);
 			
 		}
@@ -173,12 +176,10 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
 		static string fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
-		
+		static char customer_cmd[1024];
+		static bool cmd_sent_flag = false;
 		ImVec2 wnd_size = ImVec2(520, 0);
 		if (ImGui::Begin("Configuration", &ShowConfigFlag, wnd_size, -1.0f, ImGuiWindowFlags_NoResize)) {
-			if (ImGui::Checkbox("Mirror", (bool *)&mirror)) {
-				cmd->SwitchMirror();
-			}ImGui::SameLine(); ShowHelpMarker("Mirror the output by 180 degree");
 			ImGui::PushItemWidth(200);			
 			ImGui::SliderInt("hdr", &hdr_ratio, 0, 3); ImGui::SameLine();
 			ShowHelpMarker("Config HDR Ratio to config the camera into hdr mode.\nSet to 0 to disable hdr mode.");
@@ -204,7 +205,10 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			ShowHelpMarker("Set the frame rate of the camera.\nSome depth camera will not work, in a wrong frame rate value.High frame rate will reduce the detect range of camera.");
 			ImGui::SameLine(); if (ImGui::Button("Set Frame Rate")) {
 				cmd->SetFrameRate((uint16_t)fps);
-			}
+			}ImGui::SameLine();
+			if (ImGui::Checkbox("Mirror", (bool *)&mirror)) {
+				cmd->SwitchMirror();
+			}ImGui::SameLine(); ShowHelpMarker("Mirror the output by 180 degree");
 			ImGui::Separator();
 			ImGui::InputInt("Calibration Distance(mm)", &cali_distance, 10, 1000); ImGui::SameLine();
 			ShowHelpMarker("Calibration the phase offset use given distance at center 6*6 rect.");
@@ -216,22 +220,48 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			}
 			ImGui::PopItemWidth();
 
+			ImGui::Separator();
+			if (cmd_sent_flag) {
+				ImGui::SetKeyboardFocusHere();
+				cmd_sent_flag = false;
+			}				
+			if (ImGui::InputText("Custom Command", customer_cmd, IM_ARRAYSIZE(customer_cmd) - 2,
+				ImGuiInputTextFlags_EnterReturnsTrue)) {
+				int32_t len = strlen(customer_cmd);
+				if (len > 0) {
+					customer_cmd[len++] = '\r';
+					customer_cmd[len++] = '\n';
+					customer_cmd[len] = '\0';
+					cmd->SendCmd(customer_cmd, len);
+					cmd_sent_flag = true;
+					customer_cmd[len - 2] = '\0';
+				}
+			}ImGui::SameLine();
+			ShowHelpMarker("Press ENTER to Send custom command to camera");
+
 			const char *string_keys[] = { "Device ID", "Firmware Version", "Center Phase Value", "Center Amplitude Value",
 				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)" };
 			static string *string_values[] = { &devcie_id , &fw_version, &center_phase_value, &center_amplitude_value,
 				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 };
 
-			ImGui::Columns(2, "status values");
-			ImGui::Separator();
-			ImGui::Text("Status Name"); ImGui::NextColumn();
-			ImGui::Text("Value"); ImGui::NextColumn();
-			ImGui::Separator();
-			for (int i = 0; i < IM_ARRAYSIZE(string_keys); i++)
-			{
-				ImGui::Text("%s", string_keys[i]); ImGui::NextColumn();
-				ImGui::Text("%s", string_values[i]->c_str()); ImGui::NextColumn();
+			if (ImGui::CollapsingHeader("Camera Status")) {
+				wnd_size.y = 0;
+				ImGui::SetWindowSize("Configuration", wnd_size);
+				ImGui::Columns(2, "status values");
+				ImGui::Separator();
+				ImGui::Text("Status Name"); ImGui::NextColumn();
+				ImGui::Text("Value"); ImGui::NextColumn();
+				ImGui::Separator();
+				for (int i = 0; i < IM_ARRAYSIZE(string_keys); i++)
+				{
+					ImGui::Text("%s", string_keys[i]); ImGui::NextColumn();
+					ImGui::Text("%s", string_values[i]->c_str()); ImGui::NextColumn();
+				}
+				ImGui::Columns(1);
+			}else{
+				wnd_size.y = 0;
+				ImGui::SetWindowSize("Configuration", wnd_size);
 			}
-			ImGui::Columns(1);
 
 			ImGui::Separator();
 			if (ImGui::Button("Get Values") || (last_show_status == false)) {
@@ -261,6 +291,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 							}
 						}
 					}
+					MaxRange = std::stof(max_distance);
 				}
 				
 			}ImGui::SameLine();
@@ -467,7 +498,7 @@ int main(int argc, char **argv)
 			if (uvc_port.GetDepthFrame(df)){
 
 				// PointsCloudWindow
-				UpdatePointsCloudWindow(&ShowPointsCloudFlag, &uvc_port, df, DepthScale);
+				UpdatePointsCloudWindow(&ShowPointsCloudFlag, &uvc_port, df, DepthScale, MaxRange);
 
 				glfwMakeContextCurrent(MainWnd);
 				ImGui_ImplGlfw_NewFrame(MainWnd);
