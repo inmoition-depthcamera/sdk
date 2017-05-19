@@ -453,7 +453,12 @@ static void OnRxCmdData(const uint8_t * data, int32_t len, void *param) {
 	}
 	memcpy(strbuf, data, len);
 	strbuf[len] = 0;
-	cout << strbuf;
+#ifndef _MSC_VER
+	// Yallow output mark text as output from camera
+	cout << "\033[;33m" << strbuf << "\033[0m" << endl;
+#else
+	cout << strbuf << endl;
+#endif
 }
 
 int main(int argc, char **argv)

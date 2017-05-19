@@ -13,8 +13,7 @@ DenoiseFilter DepthCameraDenoiseFilter;
 
 float Rotates[3] = { 0 , 0, 0 }, Scale = 3.0f, ObjPos[3] = { 0, 0, 0 };
 
-static void DrawCone(float h, float r)
-{
+static void DrawCone(float h, float r){
 	glBegin(GL_QUAD_STRIP);
 	int i = 0;
 	for (i = 0; i <= 390; i += 15)
@@ -33,8 +32,7 @@ static void DrawCone(float h, float r)
 	glEnd();
 }
 
-static void DrawBox(float size)
-{
+static void DrawBox(float size){
 	glBegin(GL_POLYGON);
 	glColor3f(1.0, 0.0, 0.0);
 	glVertex3f(0.0f, 0.0f, 0.0f);
@@ -79,8 +77,7 @@ static void DrawBox(float size)
 	glEnd();
 }
 
-static void DrawAxis(float len)
-{
+static void DrawAxis(float len){
 	glLineWidth(2);
 	glColor3f(0.0, 0.0, 1.0f);
 	glBegin(GL_LINES);
@@ -120,8 +117,7 @@ static void DrawAxis(float len)
 }
 
 // Windows Events
-static void pc_cursor_position_callback(GLFWwindow* window, double x, double y)
-{
+static void pc_cursor_position_callback(GLFWwindow* window, double x, double y){
 	int wnd_width, wnd_height, fb_width, fb_height;
 	double scale;
 
@@ -142,8 +138,7 @@ static void pc_cursor_position_callback(GLFWwindow* window, double x, double y)
 	}
 }
 
-static void pc_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
+static void pc_mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
 	if ((button == GLFW_MOUSE_BUTTON_LEFT) && action == GLFW_PRESS) {
 		MouseDownFlag = 1;
 		glfwGetCursorPos(window, &LastMousePosX, &LastMousePosY);
@@ -158,13 +153,11 @@ static void pc_mouse_button_callback(GLFWwindow* window, int button, int action,
 	}
 }
 
-static void pc_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+static void pc_scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 	Scale *= yoffset > 0 ? 1.01f : 0.99f;
 }
 
-static void pc_size_callback(GLFWwindow* window, int width, int height, float max_range)
-{
+static void pc_size_callback(GLFWwindow* window, int width, int height, float max_range){
 	max_range *= 2;
 	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 	glMatrixMode(GL_PROJECTION);
@@ -181,8 +174,7 @@ static void pc_size_callback(GLFWwindow* window, int width, int height, float ma
 	glLoadIdentity();
 }
 
-static void pc_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+static void pc_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_LEFT:
@@ -207,14 +199,12 @@ static void pc_key_callback(GLFWwindow* window, int key, int scancode, int actio
 	}
 }
 
-static void pc_close_callback(GLFWwindow* window)
-{
+static void pc_close_callback(GLFWwindow* window){
 	ShowHideFlag = false;
 	glfwHideWindow(PointsCloudWnd);
 }
 
-static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcPort *uvc, float scale, float max_range)
-{
+static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcPort *uvc, float scale, float max_range){
 	int fw, fh;
 	static float *cloud_points = NULL;
 	static uint16_t *filted_phase = NULL;
@@ -287,12 +277,11 @@ bool InitPointsCloudWindow(int32_t w, int32_t h) {
 		return false;
 	}
 
+	// Hide the windows in start up
+	glfwWindowHint(GLFW_VISIBLE, 0);
 	PointsCloudWnd = glfwCreateWindow(w * 2, h * 2, "Depth Points Cloud", NULL, NULL);
 	if (!PointsCloudWnd)
 		return false;
-
-	// Hide the windows in start up
-	glfwHideWindow(PointsCloudWnd);
 
 	glfwSetCursorPosCallback(PointsCloudWnd, pc_cursor_position_callback);
 	glfwSetMouseButtonCallback(PointsCloudWnd, pc_mouse_button_callback);
@@ -304,18 +293,19 @@ bool InitPointsCloudWindow(int32_t w, int32_t h) {
 }
 
 void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale, float max_range) {
-	static bool last_show_hide = false;
+	static bool last_show_hide = true;
+	glfwMakeContextCurrent(PointsCloudWnd);
 	if (last_show_hide != *show_hide) {
-		if (*show_hide)
+		if (*show_hide){
 			glfwShowWindow(PointsCloudWnd);
-		else
+		}else{
 			glfwHideWindow(PointsCloudWnd);
+		}
 		ShowHideFlag = *show_hide;
 	}
 	*show_hide = ShowHideFlag;
-	last_show_hide = *show_hide;
+	last_show_hide = ShowHideFlag;
 	if (*show_hide) {
-		glfwMakeContextCurrent(PointsCloudWnd);
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		DrawPointsCloud(PointsCloudWnd, df, uvc, scale, max_range);

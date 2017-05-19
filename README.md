@@ -11,7 +11,8 @@ This SDK provides a library interface for accessing those two interfaces to obta
 
 ## 支持的平台  Supported Platform
 - Windows (Tested in Windows 10)
-- Linux like platform
+- Linux like platform(Tested in Ubuntu 16.04)
+- Not supported in Virtual Mathine(VMware or VirtualBox)
 
 ## 库依赖 Dependences
 ### SDK库 SDK Dependences
@@ -40,32 +41,32 @@ Linux 系统中，依赖如下库：
 > 注意，编译例子程序时需要设置对应的依赖库的位置。 Note that you need to set the location of the corresponding dependency library when compiling the example program.
 
 ### Linux
-- 确保所有依赖库都已经安装。 Make sure that all dependent libraries are already installed.
 - Install Dependences
 
 ````
-sudo apt-get install kdelibs5-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libudev-dev
+sudo apt-get libglfw3-dev libudev-dev
 ````
-
-- Install glfw
-
+- Get SDK source
 ````
-git clone https://github.com/glfw/glfw.git
-cd glfw
+git clone git@github.com:inmoition-depthcamera/sdk.git
+````
+- Make SDK
+````
+cd root_of_sdk_path
 mkdir build
-cd build
 cmake ..
 make
-sudo make install
 ````
-
-- cd `root_of_sdk_path`
-- mkdir build
-- cmake ..
-- make
 - 生成的目标文件，在 `root_of_sdk_path/bin` 下。 The target files are under `root_of_sdk_path/bin`.
 
-> 注意：编译工具链需要支持`c++ 11`。 Note: The compilation toolchain needs to support `c++ 11`
+- 注意 Notes：
+> 编译工具链需要支持`c++ 11`。 The compilation toolchain needs to support `c++ 11`
+
+> The camera has two nodes in /dev which are: /dev/ttyACMx and /dev/videox. Make sure your user has right to access those devices before run the example or sdk. Use following instruction to get rights:
+````
+sudo usermod -a -G video,dialout $(whoami)
+````
+
 
 ## 用法 Usage
 - 包含对应的头文件 `depth_camera_uvc.h` 与 `depth_camera_cmd.h`。 Contains the corresponding header file `depth_camera_uvc.h` and` depth_camera_cmd.h`.

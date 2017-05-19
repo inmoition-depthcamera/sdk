@@ -81,9 +81,6 @@ bool UvcInterfaceV4L::Close()
 
 	mReadFrameThreadExitFlag = true;
 
-	if (mIsOpened)
-		StopStream();
-
     if(mReadFrameThread){
         if(mReadFrameThread->joinable())
             mReadFrameThread->join();
@@ -91,6 +88,9 @@ bool UvcInterfaceV4L::Close()
         delete mReadFrameThread;
         mReadFrameThread = NULL;
     }
+
+	if (mIsOpened)
+		StopStream();
 
 	for (int i = 0; i < NB_BUFFER; i++){
         if(mMemBuffers[i])
@@ -101,7 +101,6 @@ bool UvcInterfaceV4L::Close()
         close(mFd);
         mFd = -1;
     }
-
 	return true;
 }
 
