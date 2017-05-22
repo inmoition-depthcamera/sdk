@@ -11,7 +11,26 @@ SET(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 INCLUDE_DIRECTORIES(${SRCDIR})
 
-IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+
+    file(GLOB_RECURSE SRC_LIST
+        "${SRCDIR}/depth_camera_cmd.cpp"
+        "${SRCDIR}/depth_camera_uvc.cpp"
+        "${SRCDIR}/depth_frame.cpp"
+        "${SRCDIR}/filter/*.cpp"
+        "${SRCDIR}/os/cmd_interface.cpp"
+        "${SRCDIR}/os/cmd_interface_win.cpp"
+        "${SRCDIR}/os/uvc_interface.cpp"        
+        "${SRCDIR}/os/uvc_interface_direct_show.cpp")
+
+    ADD_LIBRARY(${SDK_NAME}_shared SHARED ${SRC_LIST})
+    ADD_LIBRARY(${SDK_NAME}_static STATIC ${SRC_LIST})
+
+    set_target_properties(${SDK_NAME}_shared PROPERTIES OUTPUT_NAME ${SDK_NAME})
+    set_target_properties(${SDK_NAME}_static PROPERTIES OUTPUT_NAME ${SDK_NAME})
+
+ELSE()
+
     option(USE_LIBUDEV "ON to use libudev to get uvc related command port" ON)
 	SET(CMAKE_CXX_FLAGS "-Wall -O2 -Werror ${CMAKE_CXX_FLAGS}")
     file(GLOB_RECURSE SRC_LIST
@@ -38,25 +57,6 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         TARGET_LINK_LIBRARIES(${SDK_NAME}_shared udev)
         TARGET_LINK_LIBRARIES(${SDK_NAME}_static udev)
     ENDIF()
-
-ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
-
-    file(GLOB_RECURSE SRC_LIST
-        "${SRCDIR}/depth_camera_cmd.cpp"
-        "${SRCDIR}/depth_camera_uvc.cpp"
-        "${SRCDIR}/depth_frame.cpp"
-        "${SRCDIR}/filter/*.cpp"
-        "${SRCDIR}/os/cmd_interface.cpp"
-        "${SRCDIR}/os/cmd_interface_win.cpp"
-        "${SRCDIR}/os/uvc_interface.cpp"        
-        "${SRCDIR}/os/uvc_interface_direct_show.cpp")
-
-    ADD_LIBRARY(${SDK_NAME}_shared SHARED ${SRC_LIST})
-    ADD_LIBRARY(${SDK_NAME}_static STATIC ${SRC_LIST})
-
-    set_target_properties(${SDK_NAME}_shared PROPERTIES OUTPUT_NAME ${SDK_NAME})
-    set_target_properties(${SDK_NAME}_static PROPERTIES OUTPUT_NAME ${SDK_NAME})
-
 
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
