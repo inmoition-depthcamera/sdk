@@ -1,60 +1,61 @@
-# Inmotion Depth Camera SDK [(Chinese)](https://github.com/inmoition-depthcamera/sdk/blob/master/README_cn.md)
-
+# Inmotion Depth Camera SDK
 Linux/Window SDK for Inmotion's Depth Cameras
-Inmotion depth camera's external interface is a USB composite device that contains a common UVC camera interface and a USB virtual serial port.
-This SDK provides a library interface for accessing those two interfaces to obtaining data, and configuring the depth camera.
 
-## Supported Platform
+乐行深度摄像头，对外接口是一个USB复合设备，其包含一个普通的UVC摄像头接口和一个USB虚拟串口。
+
+本SDK提供了类库接口，用于对上述两个接口进行访问，获取数据，以及对深度摄像头进行配置。
+
+
+## 支持的平台 
 - Windows (Tested in Windows 10)
 - Linux like platform(Tested in Ubuntu 16.04)
 - Not supported in Virtual Mathine(VMware or VirtualBox)
 
-## Dependences
-### SDK Dependences
+## 库依赖
+### SDK库 
 #### Windows
-
-The SDK using the Windows API directly and `Direct Show` for interface access and control and does not depend on other libraries
+Windows 系统，在SDK中直接使用Windows API 和Direct Show来进行接口访问和控制，不依赖于其他的类库。
 
 #### Linux
+Linux 系统中，依赖如下库：
+- **V4L** 在大多数Linux的发行版中已经内置了。 
+- **libudev** 用于对USB设备信息进行管理（获取设备名称）。
+- **cmake** 用于构建和编译工程。
 
-- **V4L** Already included in most Linux distributions.
-- **libudev** Used to manage USB device information.
-- **cmake** Used to build and compile projects.
-
-### Examples Dependences
+### 例子程序
 - OpenGL
 - glfw3
 
-## Buld
+## 编译方法 
 
 ### Windows
-- Make sure that all dependent libraries are already installed.
-- Install Visual Studio 2017.
-- Enter the `msvc` directory, open the `inmotion-depth-camera-sdk.sln file`, complete the compilation.
+- 确保所有依赖库都已经安装。 
+- 安装 Visual Studio 2017. 
+- 进入`msvc`目录，打开`inmotion-depth-camera-sdk.sln`文件，完成编译。 
 
-> Note that you need to set the location of the corresponding dependency library when compiling the example program.
+> 注意，编译例子程序时需要设置对应的依赖库的位置。 
 
 ### Linux
-- Install Dependences
+- 安装依赖
 
 ````
 sudo apt-get libglfw3-dev libudev-dev
 ````
-- Get SDK source
+- 下载SDK源码
 ````
 git clone git@github.com:inmoition-depthcamera/sdk.git
 ````
-- Make SDK
+- 生成SDK
 ````
 cd root_of_sdk_path
 mkdir build
 cmake ..
 make
 ````
-- The target files are under `root_of_sdk_path/bin`.
+- 生成的目标文件，在 `root_of_sdk_path/bin` 下。
 
-- Notes：
-> The compilation toolchain needs to support `c++ 11`
+- 注意 Notes：
+> 编译工具链需要支持`c++ 11`。
 
 > The camera has two nodes in /dev which are: /dev/ttyACMx and /dev/videox. Make sure your user has right to access those devices before run the example or sdk. Use following instruction to get rights:
 ````
@@ -62,22 +63,22 @@ sudo usermod -a -G video,dialout $(whoami)
 ````
 
 
-## Usage
-- Contains the corresponding header file `depth_camera_uvc.h` and` depth_camera_cmd.h`.
-- Call `DepthCameraUvcPort::GetDepthCameraList` to get the depth cameras connected to the system.
-- Call `DepthCameraCmdPort::GetUvcRelatedCmdPort` to get the name of the command port for given depth camera name.
-- Call `DepthCameraCmdPort::Open` to open the command port. **Note: The command port needs to be opened first than the UVC port**.
-- Call `DepthCameraUvcPort::SetDepthFrameCallback` to set the frame callback function. Or directly call `DepthCameraUvcPort::GetDepthFrame` to get the latest depth of the camera frame after opened the uvc port.
-- Call `DepthCameraUvcPort::Open` to open the UVC data port. **Note: The command port needs to be opened first than the UVC port.**
-- Call `DepthCameraCmdPort::GetDepthScale` to get the depth data and distance conversion factor.
-- Call `DepthCameraUvcPort::DepthToPointCloud` to convert deep data frames to 3D point cloud data.
-- Perform user operations.
-- Call `DepthCameraUvcPort::Close` to close the UVC data flow interface.
-- Call `DepthCameraCmdPort::Close` to close the command interface.
+## 用法
+- 包含对应的头文件 `depth_camera_uvc.h` 与 `depth_camera_cmd.h`。
+- 调用 `DepthCameraUvcPort::GetDepthCameraList` 来获得系统中所连接的深度摄像头。
+- 调用 `DepthCameraCmdPort::GetUvcRelatedCmdPort` 来获取深度摄像头的命令端口名称。
+- 调用 `DepthCameraCmdPort::Open` 来打开命令端口。 **注意：命令端口需要比UVC端口先打开**。 
+- 调用 `DepthCameraUvcPort::SetDepthFrameCallback` 来设置帧回调函数。或者不设置回调函数，在摄像头打开后直接调用`DepthCameraUvcPort::GetDepthFrame` 来获取最新的深度摄像头帧。 
+- 调用 `DepthCameraUvcPort::Open` 来打开UVC数据流端口。 **注意：命令端口需要比UVC端口先打开**。 
+- 调用 `DepthCameraCmdPort::GetDepthScale` 来获取深度数据和距离的转换系数。 
+- 调用 `DepthCameraUvcPort::DepthToPointCloud` 来将深度数据帧，转换为三维点云数据。
+- 执行用户运算。 Perform user operations.
+- 调用 `DepthCameraUvcPort::Close` 来关闭UVC数据流接口。 
+- 调用 `DepthCameraCmdPort::Close` 来关闭命令接口。
 
-## Depth Frame
+## 深度数据帧
 
-In the SDK, a depth frame is represented by the following class:
+在SDK中，一个深度帧，用如下类表示： 
 
 ````
 class DepthFrame{
@@ -111,15 +112,15 @@ public:
 };
 ````
 
-Each depth frame contains the following parts:
-- **phase** phase information. The conversion relationship between the phase and the distance is: distance = phase * K. K is related to the modulation frequency and can be obtained by the `GetDepthScale` function. Only low 12 bits are valid.
-- **amplitude** confidence level (strength) information. The confidence of each pixel. The higher the confidence, the smaller the noise, the higher the credibility. Only low 12 active. (Some of the camera's amplitude of the lower 4 bits is 0, the actual effective data for the Bit 4 ~ Bit 11).
-- Ambient light information. Indicates the intensity of the effective band of light in the environment. Only the lower 3 bits is valid.
-- **flags** Exposure information. Indicates whether the pixel has been over exposed, and if it is over exposed, the pixel should be considered invalid. Only lower 1 bit is valid.
+每个深度帧，都包含如下几个部分： 
+- **phase** 相位信息。相位信息和距离信息的换算关系为：distance = phase * K。 K与调制频率有关，可以通过 `GetDepthScale` 函数获得。phase只有低12位有效。 
+- **amplitude** 置信度（强度）信息。强度信息，表示每个像素点的置信度，置信度越高，噪声越小，可信度越高。只有低12位有效。（有些摄像头的置信度信息的低4位为0，实际有效的数据为 Bit 4 ~ Bit 11）。
+- **ambient** 环境光信息。表示环境中有效波段光的强度。只有低3位有效。 
+- **flags**   过曝光信息。表示该像素点是否存在过曝，如果过曝，则该像素点应该被视为无效。只有低1位有效。 
 
-## Camera configuration
+## 摄像头配置
 
-This SDK provides the following interfaces for configuration:
+本SDK提供了如下接口来进行配置： 
 
 - **SetIntegrationTime** Set the integration time of camera.
 - **SetExternIlluminatePower** Set the extern illuminate power.
@@ -138,9 +139,9 @@ This SDK provides the following interfaces for configuration:
 - **GetUpgradeProgress** Get upgrade progress.
 - **IsUpgrading** Get upgrade status.
 
-> Refer to the comments in the `depth_camera_cmd.h` file for usage of the above interface functions.
+> 上述接口函数的用法，请参考`depth_camera_cmd.h`文件中的注释。
 
-## Simple example to grabber frame data from depth camera
+## 例子程序 
 
 ````
 #include <depth_camera_cmd.h>
