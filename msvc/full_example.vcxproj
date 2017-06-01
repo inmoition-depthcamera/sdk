@@ -16,6 +16,7 @@
     <ClCompile Include="..\example\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\example\full_example.cpp" />
     <ClCompile Include="..\example\imgui\VeraMono_font.cpp" />
+    <ClCompile Include="..\example\model_view.cpp" />
     <ClCompile Include="..\example\points_cloud.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -23,6 +24,7 @@
     <ClInclude Include="..\example\imgui\imgui.h" />
     <ClInclude Include="..\example\imgui\imgui_impl_glfw.h" />
     <ClInclude Include="..\example\imgui\imgui_internal.h" />
+    <ClInclude Include="..\example\model_view.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

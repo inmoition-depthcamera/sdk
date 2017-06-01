@@ -26,8 +26,8 @@ float DepthScale = 7.5f / 3072, MaxRange = 7.5f;
 int32_t MainMenuHeight = 20;
 string CurrentUvcName;
 
-bool InitPointsCloudWindow(int32_t w, int32_t h);
-void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale, float max_range);
+bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float scale, float max_range);
+void UpdatePointsCloudWindow(bool *show_hide, DepthFrame *df);
 
 static void ShowHelpMarker(const char* desc)
 {
@@ -479,7 +479,7 @@ int main(int argc, char **argv)
 
 	MainMenuHeight = (int)(ImGui::GetStyle().FramePadding.y * 2) + FONT_SIZE;
 
-	MainWnd = glfwCreateWindow((int)(w * 2.5f), (int)(h * 2.5f) + MainMenuHeight, "Inmotion Depth Camera Full Example" , NULL, NULL);
+	MainWnd = glfwCreateWindow((int)(w * 2), (int)(h * 2) + MainMenuHeight, "Inmotion Depth Camera Full Example" , NULL, NULL);
 	
 	cmd_port.SetRxDataCallBack(OnRxCmdData, &cmd_port);
 
@@ -488,7 +488,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	
-	InitPointsCloudWindow(w, h);
+	InitPointsCloudWindow(w, h, &uvc_port, DepthScale, MaxRange);
 
 	glfwMakeContextCurrent(MainWnd);
 	ImGui_ImplGlfw_Init(MainWnd, true);
@@ -503,7 +503,7 @@ int main(int argc, char **argv)
 			if (uvc_port.GetDepthFrame(df)){
 
 				// PointsCloudWindow
-				UpdatePointsCloudWindow(&ShowPointsCloudFlag, &uvc_port, df, DepthScale, MaxRange);
+				UpdatePointsCloudWindow(&ShowPointsCloudFlag, df);
 
 				glfwMakeContextCurrent(MainWnd);
 				ImGui_ImplGlfw_NewFrame(MainWnd);

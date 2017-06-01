@@ -2,198 +2,93 @@
 #include <depth_camera_uvc.h>
 #include <denoise_filter.h>
 #include <GLFW/glfw3.h>
+#include "model_view.h"
 
 #define ENABLE_DINOISE_FILTER 1
 
 GLFWwindow* PointsCloudWnd = NULL;
 
-bool MouseDownFlag = false, ShowHideFlag = false;
-double LastMousePosX, LastMousePosY;
-DenoiseFilter DepthCameraDenoiseFilter;
+static bool MouseDownFlag = false, ShowHideFlag = false;
+static double LastMousePosX, LastMousePosY;
+static DenoiseFilter DepthCameraDenoiseFilter;
+static glModelView ModelView;
+static DepthCameraUvcPort *UvcPort;
+static float UserScale = 1.0f, MaxRange = 7.5f;
 
-float Rotates[3] = { 0 , 0, 0 }, Scale = 3.0f, ObjPos[3] = { 0, 0, 0 };
-
-static void DrawCone(float h, float r){
-	glBegin(GL_QUAD_STRIP);
-	int i = 0;
-	for (i = 0; i <= 390; i += 15)
-	{
-		float p = i * 3.14f / 180;
-		glVertex3f(0, 0, h);
-		glVertex3f(r * sin(p), r * cos(p), 0.0f);
-	}
-	glEnd();
-	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	for (i = 0; i <= 390; i += 15) {
-		float p = i * 3.14f / 180;
-		glVertex3f(r * sin(p), r * cos(p), 0.0f);
-	}
-	glEnd();
-}
-
-static void DrawBox(float size){
-	glBegin(GL_POLYGON);
-	glColor3f(1.0, 0.0, 0.0);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, size);
-	glVertex3f(size, 0.0f, size);
-	glVertex3f(size, 0.0f, 0.0f);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glColor3f(0.0, 1.0, 0.0);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(size, 0.0f, 0.0f);
-	glVertex3f(size, size, 0.0f);
-	glVertex3f(0.0f, size, 0.0f);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glColor3f(0.0, 0.0, 1.0);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, size, 0.0f);
-	glVertex3f(0.0f, size, size);
-	glVertex3f(0.0f, 0.0f, size);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glColor3f(1.0, 0.0, 1.0);
-	glVertex3f(size, 0.0f, 0.0f);
-	glVertex3f(size, 0.0f, size);
-	glVertex3f(size, size, size);
-	glVertex3f(size, size, 0.0f);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glColor3f(1.0, 1.0, 0.0);
-	glVertex3f(0.0f, size, 0.0f);
-	glVertex3f(0.0f, size, size);
-	glVertex3f(size, size, size);
-	glVertex3f(size, size, 0.0f);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glColor3f(0.0, 1.0, 1.0);
-	glVertex3f(0.0f, 0.0f, size);
-	glVertex3f(size, 0.0f, size);
-	glVertex3f(size, size, size);
-	glVertex3f(0.0f, size, size);
-	glEnd();
-}
-
-static void DrawAxis(float len){
-	glLineWidth(2);
-	glColor3f(0.0, 0.0, 1.0f);
-	glBegin(GL_LINES);
-	glVertex3f(-len, 0.0f, 0);
-	glVertex3f(len, 0.0f, 0);
-	glEnd();
-	glColor3f(0.0, 1.0, 0.0f);
-	glBegin(GL_LINES);
-	glVertex3f(0.0, -len, 0);
-	glVertex3f(0.0, len, 0);
-	glEnd();
-	glColor3f(1.0, 0.0, 0.0f);
-	glBegin(GL_LINES);
-	glVertex3f(0, 0.0f, -5);
-	glVertex3f(0, 0.0f, 5);
-	glEnd();
-
-	glColor3f(0.0, 0.0, 1.0f);
-	glPushMatrix();
-	glTranslatef(len, 0, 0);
-	glRotatef(90, 0, 1, 0);
-	DrawCone(0.5f, 0.1f);
-	glPopMatrix();
-
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glPushMatrix();
-	glTranslatef(0, len, 0);
-	glRotatef(90, -1, 0, 0);
-	DrawCone(0.5f, 0.1f);
-	glPopMatrix();
-
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glPushMatrix();
-	glTranslatef(0, 0, len);
-	DrawCone(0.5f, 0.1f);
-	glPopMatrix();
-}
+static float Scale = 3.0f;
 
 // Windows Events
 static void pc_cursor_position_callback(GLFWwindow* window, double x, double y){
-	int wnd_width, wnd_height, fb_width, fb_height;
-	double scale;
-
 	if (MouseDownFlag) {
-		glfwGetWindowSize(window, &wnd_width, &wnd_height);
-		glfwGetFramebufferSize(window, &fb_width, &fb_height);
-
-		scale = (double)fb_width / (double)wnd_width;
-
-		x *= scale;
-		y *= scale;
-
-		Rotates[1] += (float)(x - LastMousePosX);
-		Rotates[0] += (float)(y - LastMousePosY);
-
+		ModelView.SetCameraDetaAngle((float)(y - LastMousePosY), (float)(x - LastMousePosX), 0);
 		LastMousePosX = x;
 		LastMousePosY = y;
 	}
 }
 
 static void pc_mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-	if ((button == GLFW_MOUSE_BUTTON_LEFT) && action == GLFW_PRESS) {
-		MouseDownFlag = 1;
-		glfwGetCursorPos(window, &LastMousePosX, &LastMousePosY);
-	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		MouseDownFlag = 0;
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (action == GLFW_PRESS) {
+			MouseDownFlag = true;
+			glfwGetCursorPos(window, &LastMousePosX, &LastMousePosY);
+		}
+		else {
+			MouseDownFlag = false;
+		}
 	}
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && mods == 2) {
-		Rotates[0] = Rotates[1] = Rotates[2] = 0;
-		Scale = 5.0f;
+	if (action == GLFW_RELEASE) {
+		static auto before = std::chrono::high_resolution_clock::now();
+		auto now = std::chrono::high_resolution_clock::now();
+		double diff_ms = std::chrono::duration <double, std::milli>(now - before).count();
+		before = now;
+		if (diff_ms > 30 && diff_ms < 300) {
+			ModelView.Reset(); //double click reset
+		}
 	}
 }
 
 static void pc_scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
-	Scale *= yoffset > 0 ? 1.01f : 0.99f;
+	ModelView.ZoomCamera((float)(yoffset * 0.4));
 }
 
-static void pc_size_callback(GLFWwindow* window, int width, int height, float max_range){
-	max_range *= 2;
-	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	if (width <= height) {
-		float factor = (GLfloat)height / (GLfloat)width;
-		glOrtho(-max_range, max_range, -max_range * factor, max_range * factor, -max_range, max_range);
-	}
-	else {
-		float factor = (GLfloat)width / (GLfloat)height;
-		glOrtho(-max_range * factor, max_range * factor, -max_range, max_range, -max_range, max_range);
-	}
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+static void pc_resize_callback(GLFWwindow* window, int w, int h){
+	ModelView.Resize(w, h);
 }
 
 static void pc_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+	static bool show_camera = true, show_axis = true, show_grid = true, show_frustum = true, init_angle = false;
+	static float camera_angles[4] = {0, 90, 180, 270};
+	static int32_t camera_angle_indexs[3] = { 0, 1, 2};
 	if (action == GLFW_PRESS) {
 		switch (key) {
-		case GLFW_KEY_LEFT:
-			ObjPos[0] += 0.2f;
+		case GLFW_KEY_C:
+			show_camera = !show_camera;
+			ModelView.ShowCamera(show_camera);
 			break;
-		case GLFW_KEY_RIGHT:
-			ObjPos[0] -= 0.2f;
+		case GLFW_KEY_A:
+			show_axis = !show_axis;
+			ModelView.ShowAxis(show_axis);
 			break;
-		case GLFW_KEY_UP:
-			ObjPos[1] += 0.2f;
+		case GLFW_KEY_G:
+			show_grid = !show_grid;
+			ModelView.ShowGrid(show_grid);
 			break;
-		case GLFW_KEY_DOWN:
-			ObjPos[1] -= 0.2f;
+		case GLFW_KEY_F:
+			show_frustum = !show_frustum;
+			ModelView.ShowFrustum(show_frustum);
 			break;
-		case GLFW_KEY_O:
-			ObjPos[2] += 0.2f;
+		case GLFW_KEY_1:
+			ModelView.SetCameraAngle(camera_angles[camera_angle_indexs[0] & 0x03], 0, 0);
+			camera_angle_indexs[0] ++;
 			break;
-		case GLFW_KEY_P:
-			ObjPos[2] -= 0.2f;
+		case GLFW_KEY_2:
+			ModelView.SetCameraAngle(0, -camera_angles[camera_angle_indexs[1] & 0x03], 0);
+			camera_angle_indexs[1] ++;
+			break;
+		case GLFW_KEY_3:
+			ModelView.SetCameraAngle(0, 0, camera_angles[camera_angle_indexs[2] & 0x03]);
+			camera_angle_indexs[2] ++;
 			break;
 		}
 	}
@@ -204,11 +99,13 @@ static void pc_close_callback(GLFWwindow* window){
 	glfwHideWindow(PointsCloudWnd);
 }
 
-static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcPort *uvc, float scale, float max_range){
-	int fw, fh;
+static void DrawCallBack(void *cb_param, void *render_param){
+
 	static float *cloud_points = NULL;
 	static uint16_t *filted_phase = NULL;
 	static bool filter_init = false;
+	int points_cnt;
+	DepthFrame *df = (DepthFrame *)render_param;
 
 	int32_t frame_size = df->w * df->h;
 
@@ -218,10 +115,6 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 	if (filted_phase == NULL)
 		filted_phase = new uint16_t[frame_size];
 
-	glfwGetFramebufferSize(window, &fw, &fh);
-
-	pc_size_callback(window, fw, fh, max_range);
-
 	// use filter to denoise
 #if ENABLE_DINOISE_FILTER
 	if (filter_init == false) {
@@ -229,34 +122,22 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 		filter_init = true;
 	}
 	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 8);
-	uvc->ToPointsCloud(filted_phase, df->w, df->h, cloud_points, Scale * scale);
+	points_cnt = UvcPort->ToFiltedPointsCloud(filted_phase, df, cloud_points, Scale * UserScale);
 #else 
-	uvc->ToPointsCloud(df, cloud_points, Scale * scale);
+	points_cnt = UvcPort->ToFiltedPointsCloud(NULL, df, cloud_points, Scale * UserScale);
 #endif
 
+	glDisable(GL_LIGHTING);
+	glPushMatrix();
 	glColor3f(1.0, 1.0, 1.0);
-	glLoadIdentity();
-	glPushMatrix();
 
-	// Rotate the object
-	glRotatef(Rotates[0], 1, 0, 0);
-	glRotatef(Rotates[1], 0, 1, 0);
-	glRotatef(Rotates[2], 0, 0, 1);
-
-	glPushMatrix();
-	float box_size = 0.3f;
-	glTranslatef(-box_size / 2, -box_size / 2, -box_size / 2);
-	DrawBox(box_size);
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(ObjPos[0], ObjPos[1], ObjPos[2]);
-
-	glColor3f(1.0, 1.0, 1.0);
+	glRotatef(180, 0, 1.0f, 0.0f);
+	glTranslatef(0, 0, -MaxRange / 2);
+	
 	// Draw Points
 	glBegin(GL_POINTS);
 	float *ptr = cloud_points;
-	for (int i = 0; i < frame_size; i++) {
+	for (int i = 0; i < points_cnt; i++) {
 		float x = *ptr++;
 		float y = *ptr++;
 		float z = *ptr++;
@@ -264,14 +145,11 @@ static void DrawPointsCloud(GLFWwindow * window, DepthFrame *df, DepthCameraUvcP
 	}
 	glEnd();
 	glPopMatrix();
-
-	DrawAxis(5);
-
-	glPopMatrix();
+	glEnable(GL_LIGHTING);
 }
 
 // Public functions
-bool InitPointsCloudWindow(int32_t w, int32_t h) {
+bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float scale, float max_range) {
 
 	if (PointsCloudWnd) {
 		return false;
@@ -285,14 +163,24 @@ bool InitPointsCloudWindow(int32_t w, int32_t h) {
 
 	glfwSetCursorPosCallback(PointsCloudWnd, pc_cursor_position_callback);
 	glfwSetMouseButtonCallback(PointsCloudWnd, pc_mouse_button_callback);
+	glfwSetFramebufferSizeCallback(PointsCloudWnd, pc_resize_callback);
 	glfwSetScrollCallback(PointsCloudWnd, pc_scroll_callback);
 	glfwSetKeyCallback(PointsCloudWnd, pc_key_callback);
 	glfwSetWindowCloseCallback(PointsCloudWnd, pc_close_callback);
 
+	glfwMakeContextCurrent(PointsCloudWnd);
+	ModelView.Init(w, h);
+	ModelView.SetDrawCallBack(DrawCallBack, NULL);
+
+	UserScale = scale;
+	UvcPort = uvc;
+	MaxRange = max_range;
+
+
 	return true;
 }
 
-void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFrame *df, float scale, float max_range) {
+void UpdatePointsCloudWindow(bool *show_hide, DepthFrame *df) {
 	static bool last_show_hide = true;
 	glfwMakeContextCurrent(PointsCloudWnd);
 	if (last_show_hide != *show_hide) {
@@ -308,7 +196,9 @@ void UpdatePointsCloudWindow(bool *show_hide, DepthCameraUvcPort *uvc, DepthFram
 	if (*show_hide) {
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		DrawPointsCloud(PointsCloudWnd, df, uvc, scale, max_range);
+
+		ModelView.Render(df);
+
 		glfwSwapBuffers(PointsCloudWnd);
 	}
 }

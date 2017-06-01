@@ -198,6 +198,34 @@ int32_t DepthCameraUvcPort::ToFiltedPointsCloud(const DepthFrame *df, float * po
 	return totalPoint;
 }
 
+int32_t DepthCameraUvcPort::ToFiltedPointsCloud(const uint16_t * phase, const DepthFrame * df, float * point_clould, float scale, uint16_t phase_max, uint16_t amplitude_min)
+{
+	const uint16_t* p_buf = (phase == NULL) ? df->phase : phase;
+	const uint16_t* a_buf = df->amplitude;
+
+	int32_t w = mDepthFrame->w;
+	int32_t h = mDepthFrame->h;
+	float *table = mD2PTable;
+
+	int32_t totalPoint = 0;
+
+	for (int32_t y = 0; y < h; y++) {
+		for (int32_t x = 0; x < w; x++) {
+			if (*p_buf > 0 && *p_buf <= phase_max && *a_buf >= amplitude_min) {
+				float z = (*p_buf)  * (*table) * scale;//z
+				*point_clould++ = -(float)(x - w / 2) * z / mWFocal;//x
+				*point_clould++ = -(float)(y - h / 2) * z / mHFocal;//y
+				*point_clould++ = z;
+				totalPoint++;
+			}
+			a_buf++;
+			p_buf++;
+			table++;
+		}
+	}
+	return totalPoint;
+}
+
 void DepthCameraUvcPort::OnUvcFrame(double sample_time, uint8_t * frame_buf, int32_t frame_buf_len, void * param)
 {
 	DepthCameraUvcPort * dc = (DepthCameraUvcPort *)param;
