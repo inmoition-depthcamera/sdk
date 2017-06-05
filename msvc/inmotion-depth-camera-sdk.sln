@@ -1,21 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.4
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "idc", "idc.vcxproj", "{37FDF6C8-2E59-445D-84C8-97E9F9679F96}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{4D38A873-BE5B-45E5-9FC6-CD0151090CC0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_frame_grabber", "simple_frame_grabber.vcxproj", "{DD1E1725-BF10-42F0-872D-EAA9900670B9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{37FDF6C8-2E59-445D-84C8-97E9F9679F96} = {37FDF6C8-2E59-445D-84C8-97E9F9679F96}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "full_example", "full_example.vcxproj", "{5EB783F2-DA6E-43B0-908D-368950B2E8ED}"
-	ProjectSection(ProjectDependencies) = postProject
-		{37FDF6C8-2E59-445D-84C8-97E9F9679F96} = {37FDF6C8-2E59-445D-84C8-97E9F9679F96}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,12 +23,16 @@ Global
 		{37FDF6C8-2E59-445D-84C8-97E9F9679F96}.Release|x86.Build.0 = Release|Win32
 		{DD1E1725-BF10-42F0-872D-EAA9900670B9}.Debug|x86.ActiveCfg = Debug|Win32
 		{DD1E1725-BF10-42F0-872D-EAA9900670B9}.Debug|x86.Build.0 = Debug|Win32
+		{DD1E1725-BF10-42F0-872D-EAA9900670B9}.Debug|x86.Deploy.0 = Debug|Win32
 		{DD1E1725-BF10-42F0-872D-EAA9900670B9}.Release|x86.ActiveCfg = Release|Win32
 		{DD1E1725-BF10-42F0-872D-EAA9900670B9}.Release|x86.Build.0 = Release|Win32
+		{DD1E1725-BF10-42F0-872D-EAA9900670B9}.Release|x86.Deploy.0 = Release|Win32
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Debug|x86.ActiveCfg = Debug|Win32
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Debug|x86.Build.0 = Debug|Win32
+		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Debug|x86.Deploy.0 = Debug|Win32
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Release|x86.ActiveCfg = Release|Win32
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Release|x86.Build.0 = Release|Win32
+		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Release|x86.Deploy.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

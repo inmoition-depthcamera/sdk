@@ -2,7 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.3)
 
 PROJECT (depth_frame_grabber)
 SET(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-ADD_EXECUTABLE(depth_frame_grabber depth_frame_grabber.cpp)
+SET(SE_SRCDIR ./simple_grabber)
+ADD_EXECUTABLE(depth_frame_grabber ${SE_SRCDIR}/depth_frame_grabber.cpp)
 TARGET_LINK_LIBRARIES(depth_frame_grabber idc)
 
 if (UNIX)
@@ -14,7 +15,7 @@ endif()
 PROJECT (full_example)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
-SET(FE_SRCDIR .)
+SET(FE_SRCDIR ./full_example)
 file(GLOB_RECURSE FE_SRC_LIST
     "${FE_SRCDIR}/imgui/*.cpp"
     "${FE_SRCDIR}/full_example.cpp"

@@ -11,20 +11,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\example\imgui\imgui.cpp" />
-    <ClCompile Include="..\example\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\example\imgui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="..\example\full_example.cpp" />
-    <ClCompile Include="..\example\imgui\VeraMono_font.cpp" />
-    <ClCompile Include="..\example\model_view.cpp" />
-    <ClCompile Include="..\example\points_cloud.cpp" />
+    <ClCompile Include="..\example\full_example\full_example.cpp" />
+    <ClCompile Include="..\example\full_example\imgui\imgui.cpp" />
+    <ClCompile Include="..\example\full_example\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\example\full_example\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\example\full_example\imgui\VeraMono_font.cpp" />
+    <ClCompile Include="..\example\full_example\model_view.cpp" />
+    <ClCompile Include="..\example\full_example\points_cloud.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\example\imgui\imconfig.h" />
-    <ClInclude Include="..\example\imgui\imgui.h" />
-    <ClInclude Include="..\example\imgui\imgui_impl_glfw.h" />
-    <ClInclude Include="..\example\imgui\imgui_internal.h" />
-    <ClInclude Include="..\example\model_view.h" />
+    <ClInclude Include="..\example\full_example\camera.h" />
+    <ClInclude Include="..\example\full_example\model_view.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -65,13 +62,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>C:\Program Files (x86)\GLFW\include;$(SolutionDir)..\example\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files (x86)\GLFW\include;$(SolutionDir)..\example\full_example\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\GLFW\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>C:\Program Files (x86)\GLFW\include;$(SolutionDir)..\example\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files (x86)\GLFW\include;$(SolutionDir)..\example\full_example\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\GLFW\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
