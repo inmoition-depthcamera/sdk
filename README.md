@@ -1,4 +1,4 @@
-# Inmotion Depth Camera SDK [(Chinese)](https://github.com/inmoition-depthcamera/sdk/blob/master/README_cn.md)
+# Inmotion Depth Camera SDK
 
 Linux/Window SDK for Inmotion's Depth Cameras
 Inmotion depth camera's external interface is a USB composite device that contains a common UVC camera interface and a USB virtual serial port(**Some low resolution device only has a USB virtual serial port**).
@@ -25,7 +25,7 @@ The SDK using the Windows API directly and `Direct Show` for interface access an
 - OpenGL
 - glfw3
 
-## Buld
+## Build
 
 ### Windows
 - Make sure that all dependent libraries are already installed.
