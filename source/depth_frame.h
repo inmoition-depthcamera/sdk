@@ -45,15 +45,14 @@ public:
 	/// @return SUM result
 	uint32_t CalcCenterRectSum(int32_t phase_or_amplitude, int32_t _w, int32_t _h);
 	/// @brief Convent all depth info to a Gray24 buffer
-	/// @param gray24_buf RGB24 buffer
+	/// @param gray24_buf Gray24 buffer
 	/// @param gray24_buf_size the buffer size should >= w * h * 3 * 4
 	/// @return ok = true else = false
 	bool ToGray24(uint8_t *gray24_buf, int32_t gray24_buf_size);
-	/// @brief Calculate Histogram of the frame
-	/// @param phase_or_amplitude 0 = phase, 1 = amplitude
-	/// @param histogram_buf The result buffer to store histogram. The length of this buffer should >= max
-	/// @param max Maxium value of histogram (May consider to the length of the histogram_buf)
-	/// @return max_histogram value
+	/// @brief Convent all depth info to a RGB24 buffer
+	/// @param gray24_buf RGB24 buffer
+	/// @param gray24_buf_size the buffer size should >= w * h * 3 * 4
+	/// @return ok = true else = false
 	bool ToRgb24(uint8_t *rgb24_buf, int32_t rgb24_buf_size);
 	/// @brief Calculate Histogram of the frame
 	/// @param phase_or_amplitude 0 = phase, 1 = amplitude

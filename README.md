@@ -1,7 +1,7 @@
 # Inmotion Depth Camera SDK [(Chinese)](https://github.com/inmoition-depthcamera/sdk/blob/master/README_cn.md)
 
 Linux/Window SDK for Inmotion's Depth Cameras
-Inmotion depth camera's external interface is a USB composite device that contains a common UVC camera interface and a USB virtual serial port.
+Inmotion depth camera's external interface is a USB composite device that contains a common UVC camera interface and a USB virtual serial port(**Some low resolution device only has a USB virtual serial port**).
 This SDK provides a library interface for accessing those two interfaces to obtaining data, and configuring the depth camera.
 
 ## Supported Platform
@@ -38,7 +38,7 @@ The SDK using the Windows API directly and `Direct Show` for interface access an
 - Install Dependences
 
 ````
-sudo apt-get libglfw3-dev libudev-dev
+sudo apt-get install libglfw3-dev libudev-dev
 ````
 - Get SDK source
 ````
@@ -63,6 +63,10 @@ sudo usermod -a -G video,dialout $(whoami)
 
 
 ## Usage
+### Using Cmd and Uvc Port
+
+> For most depth camera devices. Using `DepthCameraCmdVideo` to manage and config device, and `DepthCameraUvcPort` to get frame from device. 
+
 - Contains the corresponding header file `depth_camera_uvc.h` and` depth_camera_cmd.h`.
 - Call `DepthCameraUvcPort::GetDepthCameraList` to get the depth cameras connected to the system.
 - Call `DepthCameraCmdPort::GetUvcRelatedCmdPort` to get the name of the command port for given depth camera name.
@@ -74,6 +78,19 @@ sudo usermod -a -G video,dialout $(whoami)
 - Perform user operations.
 - Call `DepthCameraUvcPort::Close` to close the UVC data flow interface.
 - Call `DepthCameraCmdPort::Close` to close the command interface.
+
+### Using cmd_video Port
+
+> For some low resolution devices. Using `DepthCameraCmdVideo`(inherited from `DepthCameraCmdPort` and `DepthVideoInterface`) to config the depth camera and grabber frame from the depth camera.
+
+- Contains the corresponding header file `depth_camera_cmd_video.h`.
+- Call `DepthCameraCmdVideo::GetDepthCameraList` to get the depth cameras connected to the system.
+- Call `DepthCameraCmdVideo::Open` to open the cmd video port. 
+- Call `DepthCameraCmdVideo::SetDepthFrameCallback` to set the frame callback function. Or directly call `DepthCameraCmdVideo::GetDepthFrame` to get the latest depth of the camera frame after opened the uvc port.
+- Call `DepthCameraCmdVideo::GetDepthScale` to get the depth data and distance conversion factor.
+- Call `DepthCameraCmdVideo::DepthToPointCloud` to convert deep data frames to 3D point cloud data.
+- Perform user operations.
+- Call `DepthCameraCmdVideo::Close` to close the cmd video port
 
 ## Depth Frame
 
@@ -103,6 +120,8 @@ public:
 	uint32_t CalcRectSum(int32_t phase_or_amplitude, int32_t x, int32_t y, int32_t _w, int32_t _h);
 	/// @brief Calculate SUM of given center rect from frame
 	uint32_t CalcCenterRectSum(int32_t phase_or_amplitude, int32_t _w, int32_t _h);
+	/// @brief Convent all depth info to a Gray24 buffer
+	bool ToGray24(uint8_t *gray24_buf, int32_t gray24_buf_size);
 	/// @brief Convent all depth info to a rgb24 buffer
 	bool ToRgb24(uint8_t *rgb24_buf, int32_t rgb24_buf_size);
 	/// @brief Calculate Histogram of the frame
@@ -112,9 +131,9 @@ public:
 ````
 
 Each depth frame contains the following parts:
-- **phase** phase information. The conversion relationship between the phase and the distance is: distance = phase * K. K is related to the modulation frequency and can be obtained by the `GetDepthScale` function. Only low 12 bits are valid.
-- **amplitude** confidence level (strength) information. The confidence of each pixel. The higher the confidence, the smaller the noise, the higher the credibility. Only low 12 active. (Some of the camera's amplitude of the lower 4 bits is 0, the actual effective data for the Bit 4 ~ Bit 11).
-- Ambient light information. Indicates the intensity of the effective band of light in the environment. Only the lower 3 bits is valid.
+- **phase** Phase information. The conversion relationship between the phase and the distance is: distance = phase * K. K is related to the modulation frequency and can be obtained by the `GetDepthScale` function. Only low 12 bits are valid.
+- **amplitude** Confidence level (strength) information. The confidence of each pixel. The higher the confidence, the smaller the noise, the higher the credibility. Only low 12 active. (Some of the camera's amplitude of the lower 4 bits is 0, the actual effective data for the Bit 4 ~ Bit 11).
+- **ambient** Ambient light information. Indicates the intensity of the effective band of light in the environment. Only the lower 3 bits is valid.
 - **flags** Exposure information. Indicates whether the pixel has been over exposed, and if it is over exposed, the pixel should be considered invalid. Only lower 1 bit is valid.
 
 ## Camera configuration
@@ -140,7 +159,7 @@ This SDK provides the following interfaces for configuration:
 
 > Refer to the comments in the `depth_camera_cmd.h` file for usage of the above interface functions.
 
-## Simple example to grabber frame data from depth camera
+## Simple example to grabber frame data from depth camera using cmd and uvc port
 
 ````
 #include <depth_camera_cmd.h>
@@ -213,6 +232,73 @@ int main(int argc, char **argv)
 		}		
 	}
 	cout << "app shutdown" << endl;
+	return 0;
+}
+````
+
+## Simple example to grabber frame data from depth camera using cmd_video port
+
+````
+#include <iostream>
+#include <stdio.h>
+#include <depth_camera_cmd_video.h>
+
+using namespace std;
+using namespace chrono;
+
+void OnDepthFrame(const DepthFrame *df, void*param){
+
+	static auto last_time = system_clock::now();
+	static auto last_avg_time = system_clock::now();
+	static int32_t dt_avg_v = 0, total_count = 0;
+	auto cur_time = system_clock::now();
+	auto dt = duration_cast<milliseconds>(cur_time - last_time);
+
+	total_count ++;
+
+	if(total_count % 30 == 0){
+		auto cur_avg_time = system_clock::now();
+		auto dt_avg = duration_cast<milliseconds>(cur_avg_time - last_avg_time);
+		dt_avg_v = (int32_t)dt_avg.count();
+		last_avg_time = cur_avg_time;
+	}
+
+	last_time = cur_time;
+	int32_t dt_v = (int32_t)dt.count();
+	printf("frame size: w = %d, h = %d, fps_rt: %0.02f fps: %0.02f (%d)\n",
+		   df->w, df->h, 1000.0f / dt_v,
+		   dt_avg_v ? 1000.0f * 30 / dt_avg_v : 0, total_count);
+}
+
+int main(int argc, char **argv)
+{
+	DepthCameraCmdVideo cmd_video_port;
+
+	std::vector<std::string> camera_list;
+	string cmd_port_name;
+
+	// get the valid camera names
+	cmd_video_port.GetDepthCameraList(camera_list);
+	for(auto name : camera_list){
+		std::cout << name << endl;
+	}
+
+    if(camera_list.size() > 0){
+		cmd_video_port.SetDepthFrameCallback(OnDepthFrame, nullptr);
+		
+		if (cmd_video_port.Open(camera_list[0])) {
+			std::string status;
+			cmd_video_port.GetSystemStatus(status);
+			std::cout << status << endl;
+
+			// Grabber 10 seconds frame
+			this_thread::sleep_for(chrono::seconds(10));
+
+			std::cout << "close uvc port" << endl;
+			cmd_video_port.Close();
+		}
+	}
+	std::cout << "app shutdown" << endl;
 	return 0;
 }
 ````
