@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "idc", "idc.vcxproj", "{37FDF6C8-2E59-445D-84C8-97E9F9679F96}"
 EndProject
@@ -10,6 +10,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_frame_grabber", "simple_frame_grabber.vcxproj", "{DD1E1725-BF10-42F0-872D-EAA9900670B9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "full_example", "full_example.vcxproj", "{5EB783F2-DA6E-43B0-908D-368950B2E8ED}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_frame_grabber_cmd_video", "simple_frame_grabber_cmd_video.vcxproj", "{C70A87B6-4488-4CDF-A5DB-0532E2C51F3F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "full_example_cmd_video", "full_example_cmd_video.vcxproj", "{AD0D3FA6-0796-4A1C-AE93-88CE24944E77}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,14 @@ Global
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Release|x86.ActiveCfg = Release|Win32
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Release|x86.Build.0 = Release|Win32
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED}.Release|x86.Deploy.0 = Release|Win32
+		{C70A87B6-4488-4CDF-A5DB-0532E2C51F3F}.Debug|x86.ActiveCfg = Debug|Win32
+		{C70A87B6-4488-4CDF-A5DB-0532E2C51F3F}.Debug|x86.Build.0 = Debug|Win32
+		{C70A87B6-4488-4CDF-A5DB-0532E2C51F3F}.Release|x86.ActiveCfg = Release|Win32
+		{C70A87B6-4488-4CDF-A5DB-0532E2C51F3F}.Release|x86.Build.0 = Release|Win32
+		{AD0D3FA6-0796-4A1C-AE93-88CE24944E77}.Debug|x86.ActiveCfg = Debug|Win32
+		{AD0D3FA6-0796-4A1C-AE93-88CE24944E77}.Debug|x86.Build.0 = Debug|Win32
+		{AD0D3FA6-0796-4A1C-AE93-88CE24944E77}.Release|x86.ActiveCfg = Release|Win32
+		{AD0D3FA6-0796-4A1C-AE93-88CE24944E77}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -40,5 +52,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{DD1E1725-BF10-42F0-872D-EAA9900670B9} = {4D38A873-BE5B-45E5-9FC6-CD0151090CC0}
 		{5EB783F2-DA6E-43B0-908D-368950B2E8ED} = {4D38A873-BE5B-45E5-9FC6-CD0151090CC0}
+		{C70A87B6-4488-4CDF-A5DB-0532E2C51F3F} = {4D38A873-BE5B-45E5-9FC6-CD0151090CC0}
+		{AD0D3FA6-0796-4A1C-AE93-88CE24944E77} = {4D38A873-BE5B-45E5-9FC6-CD0151090CC0}
 	EndGlobalSection
 EndGlobal

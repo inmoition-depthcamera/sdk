@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 
-#include <depth_camera_cmd.h>
-#include <depth_camera_uvc.h>
+#include <depth_camera_cmd_video.h>
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include <imgui.h>
@@ -26,7 +25,7 @@ float DepthScale = 7.5f / 3072, MaxRange = 7.5f;
 int32_t MainMenuHeight = 20;
 string CurrentUvcName;
 
-bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float scale, float max_range);
+bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraCmdVideo *cmd_video, float scale, float max_range);
 void UpdatePointsCloudWindow(bool *show_hide, DepthFrame *df);
 
 static void ShowHelpMarker(const char* desc)
@@ -41,7 +40,7 @@ static void ShowHelpMarker(const char* desc)
 	}
 }
 
-static void DrawDepthFrame(DepthFrame *df, DepthCameraUvcPort *uvc) {
+static void DrawDepthFrame(DepthFrame *df, DepthCameraCmdVideo *cmd_video) {
 	int fw, fh;
 	static uint8_t * rgb_buf = NULL;
 	
@@ -67,7 +66,7 @@ static void DrawDepthFrame(DepthFrame *df, DepthCameraUvcPort *uvc) {
 
 	// Draw Pixels
 	glViewport(x, y, w, h);
-	df->ToGray24(rgb_buf, frame_size * 3 * 4);
+	df->ToRgb24(rgb_buf, frame_size * 3 * 4);
 	glRasterPos2f(-1, 1);
 	glPixelZoom((float)w / (float)(df->w * 2), -(float)(h) / (float)(df->h * 2));
 	glDrawPixels(df->w * 2, df->h * 2, GL_RGB, GL_UNSIGNED_BYTE, rgb_buf);
@@ -105,15 +104,15 @@ static void DrawDepthFrame(DepthFrame *df, DepthCameraUvcPort *uvc) {
 	}
 }
 
-static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPort *uvc) {
+static void DrawFirmwareUpgradeWindow(DepthCameraCmdVideo *cmd_video) {
 	if (ShowFirmareUpgradeFlag) {
 		static char firmware_file_name[256];
 		static char info_msg[256] = "";
 		static float upgrade_progress = 0;
 		static bool last_uvc_status, last_upgrade_status = false;
-		int cur_progress = cmd->GetUpgradeProgress() ;
+		int cur_progress = cmd_video->GetUpgradeProgress() ;
 		upgrade_progress = (float)(cur_progress > 0 ? cur_progress / 100.0f : 0);
-		if (!cmd->IsUpgrading() && last_upgrade_status) {
+		if (!cmd_video->IsUpgrading() && last_upgrade_status) {
 			if (cur_progress < 0) {
 				sprintf(info_msg, "Update failed!");
 			}else {
@@ -121,10 +120,10 @@ static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPor
 			}
 			if (last_uvc_status) {
 				last_uvc_status = false;
-				uvc->Open(CurrentUvcName);
+				cmd_video->VideoControl(true);
 			}
 		}
-		last_upgrade_status = cmd->IsUpgrading();
+		last_upgrade_status = cmd_video->IsUpgrading();
 		ImVec2 wnd_size = ImVec2(512, 0);
 		if (ImGui::Begin("Firmware upgrade", &ShowFirmareUpgradeFlag, wnd_size, -1.0f, ImGuiWindowFlags_NoResize)) {
 			ImGui::Text("Please input the firmware file path(*.ifw|*.tie):"); 			
@@ -135,25 +134,25 @@ static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPor
 			ImGui::PopItemWidth();
 			ImGui::ProgressBar(upgrade_progress, ImVec2(-1.0f, 0.0f));
 			ImGui::Separator();
-			if (cmd->IsUpgrading() == false && ImGui::Button("Start Upgrade")) {
+			if (cmd_video->IsUpgrading() == false && ImGui::Button("Start Upgrade")) {
 				string file_name = firmware_file_name;
 				string type;
 				if (file_name.find(".ifw") != string::npos)
 					type = "app";
 				else if (file_name.find(".tie") != string::npos)
 					type = "dc";
-				last_uvc_status = uvc->IsOpened();
+				last_uvc_status = cmd_video->IsOpened();
 				// Should Close UVC Port First
-				uvc->Close();
+				cmd_video->VideoControl(false);
 				sprintf(info_msg, "Updating...");
 				// Then Start upgrade
-				if (cmd->StartUpgrade(file_name, type) == false) {
+				if (cmd_video->StartUpgrade(file_name, type) == false) {
 					sprintf(info_msg, "Update Failed!");
 				}
 				ImGui::SameLine();
 			}
-			if (cmd->IsUpgrading() && ImGui::Button("Stop Upgrade")) {
-				cmd->StopUpgrade();
+			if (cmd_video->IsUpgrading() && ImGui::Button("Stop Upgrade")) {
+				cmd_video->StopUpgrade();
 			}ImGui::SameLine();
 			ShowHelpMarker("Mcu firmware will reload on next boot time.\nUpgrade progress will stop current video stream, and reopen after finished."); ImGui::SameLine();
 			ImGui::Text("%s", info_msg);
@@ -171,11 +170,12 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 	// Draw Draw Config Window
 	if (ShowConfigFlag) {
 		static int32_t hdr_ratio = 0, cali_distance = 1000, integration_time = 40;
-		static int32_t extern_illum_power = 0, internal_illum_power = 0, fps = 30;
+		static int32_t extern_illum_power = 0, internal_illum_power = 0, fps = 30, fps_set = 30;
 		static int32_t mirror = 0;
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
-		static string fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
+		static string fw_version = "", product = "", devcie_id = "", set_fps = "";
+		static string current_fps = "", max_distance = "0.0", max_phase = "3072";
 		static char customer_cmd[1024];
 		static bool cmd_sent_flag = false;
 		ImVec2 wnd_size = ImVec2(520, 0);
@@ -201,7 +201,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			ImGui::SameLine(); if (ImGui::Button("Set Internal Illuminate")) {
 				cmd->SetInternalIlluminatePower((uint8_t)internal_illum_power);
 			}
-			ImGui::SliderInt("fps", &fps, 10, 60); ImGui::SameLine();
+			ImGui::SliderInt("fps", &fps_set, 10, 60); ImGui::SameLine();
 			ShowHelpMarker("Set the frame rate of the camera.\nSome depth camera will not work, in a wrong frame rate value.High frame rate will reduce the detect range of camera.");
 			ImGui::SameLine(); if (ImGui::Button("Set Frame Rate")) {
 				cmd->SetFrameRate((uint16_t)fps);
@@ -210,10 +210,16 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 				cmd->SwitchMirror();
 			}ImGui::SameLine(); ShowHelpMarker("Mirror the output by 180 degree");
 			ImGui::Separator();
+			if (ImGui::Button("Calibration Clear")) {
+				if (cmd->Calibration(cali_distance, 1))
+					cout << "Calibration finished!" << endl;
+				else
+					cout << "Calibration failed!" << endl;
+			}
 			ImGui::InputInt("Calibration Distance(mm)", &cali_distance, 10, 1000); ImGui::SameLine();
 			ShowHelpMarker("Calibration the phase offset use given distance at center 6*6 rect.");
 			ImGui::SameLine(); if (ImGui::Button("Calibration")) {
-				if (cmd->Calibration(cali_distance, 2))
+				if (cmd->Calibration(cali_distance, 1))
 					cout << "Calibration finished!" << endl;
 				else
 					cout << "Calibration failed!" << endl;
@@ -239,10 +245,10 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			}ImGui::SameLine();
 			ShowHelpMarker("Press ENTER to Send custom command to camera");
 
-			const char *string_keys[] = { "Device ID", "Firmware Version", "Center Phase Value", "Center Amplitude Value",
-				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)" };
-			static string *string_values[] = { &devcie_id , &fw_version, &center_phase_value, &center_amplitude_value,
-				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 };
+			const char *string_keys[] = { "Product", "Device ID", "Firmware Version", "Center Phase Value", "Center Amplitude Value",
+				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)", "FrameRate Set"};
+			static string *string_values[] = { &product, &devcie_id , &fw_version, &center_phase_value, &center_amplitude_value,
+				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2, &set_fps };
 
 			if (ImGui::CollapsingHeader("Camera Status")) {
 				wnd_size.y = 0;
@@ -271,9 +277,9 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 					ss.str(status);
 					string line;
 					const char *int32_keys[] = {"FPS", "Integration Time(%)", "Extern Illumination", 
-						                  "Internal Illumination", "Hdr Ratio", "Mirror"};
+						                  "Internal Illumination", "Hdr Ratio", "Mirror", "FrameRate Set" };
 					static int32_t *int32_values[] = {&fps , &integration_time, &extern_illum_power,
-					                     &internal_illum_power , &hdr_ratio, &mirror};
+					                     &internal_illum_power , &hdr_ratio, &mirror, &fps_set};
 					while (getline(ss, line)) {
 						unsigned long pos;
 						for (int i = 0; i < IM_ARRAYSIZE(int32_keys); i++) {
@@ -313,44 +319,28 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 	last_show_status = ShowConfigFlag;
 }
 
-static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, DepthFrame *df) {
+static void DrawMainWindow(DepthCameraCmdVideo * cmd_video, DepthFrame *df) {
 	int ww, wh;
-	static bool open_video_only = false, open_cmd_only = false, hdr_filter = false;
+	static bool hdr_filter = false;
 	glfwGetWindowSize(MainWnd, &ww, &wh);
 	// Draw MainMenu
 	if (ImGui::BeginMainMenuBar()) {
-		bool both_opened = cmd->IsOpened() && uvc->IsOpened();
-		bool at_least_one_opend = cmd->IsOpened() | uvc->IsOpened();
+		bool opened = cmd_video->IsOpened();
 		if (ImGui::BeginMenu("Device")) {
-			if (ImGui::BeginMenu("Open", !at_least_one_opend)) {
+			if (ImGui::BeginMenu("Open", !opened)) {
 				vector<string> camera_list;
-				uvc->GetDepthCameraList(camera_list);
+				cmd_video->GetDepthCameraList(camera_list);
 				if (camera_list.size() > 0) {
 					for (string full_name : camera_list) {
-						string simple_name = full_name.substr(full_name.find_last_of("__") + 1);
-						if (ImGui::MenuItem(simple_name.c_str())) {
-							cout << "Opening " << simple_name << " ..." << endl;
-							string cmd_port_name;
-							if (cmd->GetUvcRelatedCmdPort(full_name, cmd_port_name)) {
-								bool ret = true;
-								// open cmd port first
-								if(!open_video_only)
-									ret = cmd->Open(cmd_port_name);
-								if (ret && !open_cmd_only) {
-									if (uvc->Open(full_name)) {
-										cout << "Open Uvc port successed" << endl;
-										CurrentUvcName = full_name;
-										// get camera infomatrions
-										cmd->GetDepthScale(DepthScale);
-									}else {
-										cout << "Open Uvc port failed!" << endl;
-										cout << "Will close the cmd port" << endl;
-										if(!open_video_only)
-											cmd->Close();
-									}
-								}
-							}else
-								cout << "Can't find UVC related command port!" << endl;
+						if (ImGui::MenuItem(full_name.c_str())) {
+							cout << "Opening " << full_name << " ..." << endl;
+							// open cmd port first
+							if (cmd_video->Open(full_name)) {
+								cout << "Open Uvc port successed" << endl;
+								CurrentUvcName = full_name;
+								// get camera infomatrions
+								cmd_video->GetDepthScale(DepthScale);
+							}
 						}
 					}
 				} else {
@@ -358,32 +348,26 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 				}
 				ImGui::EndMenu();
 			}
-			if (ImGui::MenuItem("Open video only", NULL, &open_video_only, !at_least_one_opend)) open_cmd_only = false;
-			if (ImGui::MenuItem("Open cmd only", NULL, &open_cmd_only, !at_least_one_opend)) open_video_only = false;
-			if (ImGui::MenuItem("Close", NULL, (bool *)NULL, at_least_one_opend)) {
-				if (uvc->IsOpened()) {
-					cout << "Closing uvc port" << endl;
-					uvc->Close();
-				}
-				if (cmd->IsOpened()) {
-					cout << "Closing cmd port" << endl;
-					cmd->Close();
+			if (ImGui::MenuItem("Close", NULL, (bool *)NULL, opened)) {
+				if (cmd_video->IsOpened()) {
+					cout << "Closing cmd video port" << endl;
+					cmd_video->Close();
 				}
 			}
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::BeginMenu("Config")){
-			ImGui::MenuItem("Parameter Config", NULL, &ShowConfigFlag, both_opened);
-			ImGui::MenuItem("Upgrade Firmware", NULL, &ShowFirmareUpgradeFlag, cmd->IsOpened());
+			ImGui::MenuItem("Parameter Config", NULL, &ShowConfigFlag, opened);
+			ImGui::MenuItem("Upgrade Firmware", NULL, &ShowFirmareUpgradeFlag, opened);
 			ImGui::EndMenu();
 		}
 		
 		if (ImGui::BeginMenu("View")){
-			ImGui::MenuItem("3D Points Cloud", NULL, &ShowPointsCloudFlag, uvc->IsOpened());
-			ImGui::MenuItem("Histogram", NULL, &ShowStaticsFlag, uvc->IsOpened());
-			if (ImGui::MenuItem("Enable Uvc Hdr filter", NULL, &hdr_filter, uvc->IsOpened())) {
-				uvc->SetHdrMode(hdr_filter);
+			ImGui::MenuItem("3D Points Cloud", NULL, &ShowPointsCloudFlag, opened);
+			ImGui::MenuItem("Histogram", NULL, &ShowStaticsFlag, opened);
+			if (ImGui::MenuItem("Enable Uvc Hdr filter", NULL, &hdr_filter, opened)) {
+				cmd_video->SetHdrMode(hdr_filter);
 			}
 			ImGui::EndMenu();
 		}
@@ -391,11 +375,31 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 	}
 	
 	// Draw Info panel
-	ImGui::SetNextWindowPos(ImVec2(10, wh - 80.0f));
-	if (ImGui::Begin("Frame Info", NULL, ImVec2(160, 70), 0.3f,
+	ImGui::SetNextWindowPos(ImVec2(10, wh - 100.0f));
+	if (ImGui::Begin("Frame Info", NULL, ImVec2(170, 90), 0.3f,
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
+		static int32_t dly_cnt = 0;
+		static int64_t last_rx_cnt = 0;
+		static auto last_time = system_clock::now();
+		static float speed = 0;
+
+		int64_t cur_cnt = cmd_video->GetRxCount();
+		if(dly_cnt++ > 30){
+			auto dcnt = cur_cnt - last_rx_cnt;
+			auto dt = duration_cast<milliseconds>(system_clock::now() - last_time);
+			speed = dt.count() ? dcnt * 1000.0f / (dt.count() * 1024) : 0;
+
+			last_rx_cnt = cur_cnt;
+			last_time = system_clock::now();
+			dly_cnt = 0;
+		}
+		
 		ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
+		if(cur_cnt > 1024 * 1024)
+			ImGui::Text("Rx: %.2fM(%.2fk/s)", cur_cnt / (1024.0f * 1024.0f), speed);
+		else
+			ImGui::Text("Rx: %.2fK(%.2fk/s)", cur_cnt / (1024.0f), speed);
 		ImGui::Separator();
 		if (df) {
 			#define FILETER_SIZE 16
@@ -411,7 +415,6 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 			amplitude_array[index] = av;
 			amplitude_sum += av;
 			if (++index == FILETER_SIZE) index = 0;
-
 			ImGui::Text("Phase: %d(%.3fm)\nAmplitude: %d",
 				phase_sum / FILETER_SIZE, phase_sum * DepthScale / FILETER_SIZE, amplitude_sum / FILETER_SIZE);
 		}else
@@ -420,7 +423,7 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 	ImGui::End();
 }
 
-static void DrawStaticsWindow(DepthFrame *df, DepthCameraUvcPort *uvc) {
+static void DrawStaticsWindow(DepthFrame *df, DepthCameraCmdVideo *cmd_video) {
 	static bool last_show_flag = false;
 	int ww, wh;
 	glfwGetWindowSize(MainWnd, &ww, &wh);
@@ -448,23 +451,27 @@ static void DrawStaticsWindow(DepthFrame *df, DepthCameraUvcPort *uvc) {
 
 static void OnRxCmdData(const uint8_t * data, int32_t len, void *param) {
 	static char strbuf[4096];
+
+	while (data[len - 1] == 0)
+		len--;
+
 	if (len > IM_ARRAYSIZE(strbuf) - 1) {
 		len = IM_ARRAYSIZE(strbuf) - 1;
 	}
+
 	memcpy(strbuf, data, len);
 	strbuf[len] = 0;
 #ifndef _MSC_VER
 	// Yallow output mark text as output from camera
-	cout << "\033[;33m" << strbuf << "\033[0m" << endl;
+	cout << "\033[;33m" << strbuf << "\033[0m";
 #else
-	cout << strbuf << endl;
+	cout << strbuf;
 #endif
 }
 
 int main(int argc, char **argv)
 {
-	DepthCameraCmdPort cmd_port;
-	DepthCameraUvcPort uvc_port;
+	DepthCameraCmdVideo cmd_video;
 	int32_t w = 320, h = 240;
 	DepthFrame *df = NULL;
 
@@ -479,16 +486,16 @@ int main(int argc, char **argv)
 
 	MainMenuHeight = (int)(ImGui::GetStyle().FramePadding.y * 2) + FONT_SIZE;
 
-	MainWnd = glfwCreateWindow((int)(w * 2), (int)(h * 2) + MainMenuHeight, "Inmotion Depth Camera Full Example" , NULL, NULL);
+	MainWnd = glfwCreateWindow((int)(w * 2), (int)(h * 2) + MainMenuHeight, "Inmotion Depth Camera Full Example Using CmdVideoPort" , NULL, NULL);
 	
-	cmd_port.SetRxDataCallBack(OnRxCmdData, &cmd_port);
+	cmd_video.SetRxDataCallBack(OnRxCmdData, &cmd_video);
 
 	if (!MainWnd){
 		glfwTerminate();
 		return -1;
 	}
 	
-	InitPointsCloudWindow(w, h, &uvc_port, DepthScale, MaxRange);
+	InitPointsCloudWindow(w, h, &cmd_video, DepthScale, MaxRange);
 
 	glfwMakeContextCurrent(MainWnd);
 	ImGui_ImplGlfw_Init(MainWnd, true);
@@ -498,9 +505,9 @@ int main(int argc, char **argv)
 		glfwPollEvents();
 		
 		// Main Window
-		if (uvc_port.IsOpened()) {
-			df = df ? df : new DepthFrame(uvc_port.GetWidth(), uvc_port.GetHeight());
-			if (uvc_port.GetDepthFrame(df)){
+		if (cmd_video.IsOpened()) {
+			df = df ? df : new DepthFrame(cmd_video.GetWidth(), cmd_video.GetHeight());
+			if (cmd_video.GetDepthFrame(df)){
 
 				// PointsCloudWindow
 				UpdatePointsCloudWindow(&ShowPointsCloudFlag, df);
@@ -509,12 +516,12 @@ int main(int argc, char **argv)
 				ImGui_ImplGlfw_NewFrame(MainWnd);
 				glClear(GL_COLOR_BUFFER_BIT);
 
-				DrawMainWindow(&cmd_port, &uvc_port, df);
-				DrawConfigWindow(&cmd_port);
-				DrawStaticsWindow(df, &uvc_port);
-				DrawFirmwareUpgradeWindow(&cmd_port, &uvc_port);
+				DrawMainWindow(&cmd_video, df);
+				DrawConfigWindow(&cmd_video);
+				DrawStaticsWindow(df, &cmd_video);
+				DrawFirmwareUpgradeWindow(&cmd_video);
 
-				DrawDepthFrame(df, &uvc_port);
+				DrawDepthFrame(df, &cmd_video);
 				
 				glfwGetFramebufferSize(MainWnd, &w, &h);
 				glViewport(0, 0, w, h);
@@ -527,10 +534,10 @@ int main(int argc, char **argv)
 			ImGui_ImplGlfw_NewFrame(MainWnd);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			DrawMainWindow(&cmd_port, &uvc_port, NULL);
+			DrawMainWindow(&cmd_video, NULL);
 
-			if(cmd_port.IsOpened() && ShowFirmareUpgradeFlag)
-				DrawFirmwareUpgradeWindow(&cmd_port, &uvc_port);
+			if(cmd_video.IsOpened() && ShowFirmareUpgradeFlag)
+				DrawFirmwareUpgradeWindow(&cmd_video);
 
 			glfwGetFramebufferSize(MainWnd, &w, &h);
 			glViewport(0, 0, w, h);
@@ -539,12 +546,9 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	cout << "close uvc port" << endl;
-	uvc_port.Close();
-
-	cout << "close cmd port" << endl;
-	cmd_port.Close();
-
+	cout << "close cmd video port" << endl;
+	cmd_video.Close();
+	
 	delete df;
 	glfwTerminate();
 	cout << "app shutdown" << endl;

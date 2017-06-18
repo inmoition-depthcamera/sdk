@@ -38,11 +38,12 @@ bool CmdInterfaceLinux::Open(string & port_name)
 		return false;
 	}
 
-    options.c_iflag &= ~(IXON | IXOFF | IXANY);
-    options.c_cflag &= ~(CSIZE | PARENB | CSTOPB);
-    options.c_cflag |= (CLOCAL | CREAD | CS8 | CRTSCTS);// use rts to notify device port open and close event
-    options.c_oflag = 0;
-    options.c_lflag = 0;
+	options.c_cflag |= (tcflag_t)  (CLOCAL | CREAD | CS8 | CRTSCTS);
+	options.c_cflag &= (tcflag_t) ~(CSTOPB | PARENB | PARODD);
+    options.c_lflag &= (tcflag_t) ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL |
+                                       ISIG | IEXTEN); //|ECHOPRT
+	options.c_oflag &= (tcflag_t) ~(OPOST);
+	options.c_iflag &= (tcflag_t) ~(IXON | IXOFF | INLCR | IGNCR | ICRNL | IGNBRK);
 
     options.c_cc[VMIN] = 0;
     options.c_cc[VTIME] = 0;
@@ -56,14 +57,14 @@ bool CmdInterfaceLinux::Open(string & port_name)
 
 	mRxThreadExitFlag = false;
 	mRxThread = new std::thread(mRxThreadProc, this);
-	mIsOpened = true;
+	mIsCmdOpened = true;
 
 	return true;
 }
 
 bool CmdInterfaceLinux::Close()
 {
-	if(mIsOpened == false)
+	if(mIsCmdOpened == false)
 		return true;
 
 	mRxThreadExitFlag = true;
@@ -79,9 +80,47 @@ bool CmdInterfaceLinux::Close()
 		mRxThread = NULL;
 	}
 
-	mIsOpened = false;
+	mIsCmdOpened = false;
 
 	return true;
+}
+
+bool CmdInterfaceLinux::GetCmdDevices(std::vector<std::pair<std::string, std::string>> &device_list)
+{
+#ifdef USE_UDEV
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices, *dev_list_entry;
+	struct udev_device *dev;
+	udev = udev_new();
+	if (!udev) {
+		return false;
+	}
+	enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(enumerate, "tty");
+	udev_enumerate_scan_devices(enumerate);
+	devices = udev_enumerate_get_list_entry(enumerate);
+	udev_list_entry_foreach(dev_list_entry, devices) {
+		const char *path;
+		path = udev_list_entry_get_name(dev_list_entry);
+		dev = udev_device_new_from_syspath(udev, path);
+		string dev_path = string(udev_device_get_devnode(dev));
+		dev = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
+		if(dev){
+			std::pair<std::string, std::string> p;
+			p.first = dev_path;
+			p.second = udev_device_get_sysattr_value(dev,"product");
+			device_list.push_back(p);
+			udev_device_unref(dev);
+		}else
+			break;
+	}
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
+	return true;
+#else
+	return false;
+#endif
 }
 
 bool CmdInterfaceLinux::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_port_name)

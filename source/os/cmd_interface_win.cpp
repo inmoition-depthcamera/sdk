@@ -2,9 +2,18 @@
 
 #include <comdef.h>
 #include <Wbemidl.h>
-#include "comutil.h"
+#include <comutil.h>
+#include <cctype>
+#include <algorithm>
+#include <SetupAPI.h>
+#include <Cfgmgr32.h>
+#include "tchar.h"
 #pragma comment(lib, "comsupp.lib")
 #pragma comment(lib, "wbemuuid.lib")
+#pragma comment(lib, "SetupAPI.lib")
+#pragma comment(lib, "Cfgmgr32.lib")
+#include "iostream"
+using namespace std;
 
 CmdInterfaceWin::CmdInterfaceWin()
 {
@@ -44,7 +53,7 @@ bool CmdInterfaceWin::Open(string &port_name)
 	}
 
 	PurgeComm(mComHandle, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-	if (SetupComm(mComHandle, 4096, 4096) == 0) {
+	if (SetupComm(mComHandle, 102400, 102400) == 0) {
 		CloseHandle(mComHandle);
 		return false;
 	}
@@ -67,10 +76,15 @@ bool CmdInterfaceWin::Open(string &port_name)
 		}
 	}
 
-	COMMTIMEOUTS timeouts = { 1, 1, 1, 1000, 50000 };
+	COMMTIMEOUTS timeouts;
+	timeouts.ReadIntervalTimeout = 2;
+	timeouts.ReadTotalTimeoutMultiplier = 0;
+	timeouts.ReadTotalTimeoutConstant = 5;
+	timeouts.WriteTotalTimeoutConstant = 50000;
+	timeouts.WriteTotalTimeoutMultiplier = 1000;
 	SetCommTimeouts(mComHandle, &timeouts);
 
-	mIsOpened = true;
+	mIsCmdOpened = true;
 
 	mRxThreadExitFlag = false;
 	mRxThread = new std::thread(mRxThreadProc, this);
@@ -85,7 +99,7 @@ bool CmdInterfaceWin::Close()
 		return true;
 
 	mRxThreadExitFlag = true;
-	mIsOpened = false;
+	mIsCmdOpened = false;
 
 	if (mComHandle != INVALID_HANDLE_VALUE) {
 		CloseHandle(mComHandle);
@@ -134,124 +148,66 @@ bool CmdInterfaceWin::WriteToIo(const uint8_t * tx_buf, uint32_t tx_buf_len, uin
 	return true;
 }
 
-bool CmdInterfaceWin::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_port_name)
+bool CmdInterfaceWin::GetCmdDevices(std::vector<std::pair<std::string, std::string>>& device_list)
 {
-	HRESULT hres;
-#ifdef VI_COM_MULTI_THREADED
-	hres = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-#else
-	hres = CoInitialize(NULL);
-#endif
-	if (FAILED(hres))
+	const TCHAR * vid_pid = _T("VID_0483&PID_5740");
+	DWORD dwGuids = 0;
+	TCHAR prop_buf[1024];
+
+	SetupDiClassGuidsFromName(_T("Ports"), NULL, 0, &dwGuids);
+	if (dwGuids == 0)
 		return false;
 
-	IWbemLocator *pLoc = NULL;
-	hres = CoCreateInstance(
-		CLSID_WbemLocator,
-		0,
-		CLSCTX_INPROC_SERVER,
-		IID_IWbemLocator, (LPVOID *)&pLoc);
+	GUID *pGuids = new GUID[dwGuids];
+	SetupDiClassGuidsFromName(_T("Ports"), pGuids, dwGuids, &dwGuids);
 
-	if (FAILED(hres)) {
-		CoUninitialize();
-		return false;
-	}
-
-	IWbemServices *pSvc = NULL;
-
-	hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc );
-
-	if (FAILED(hres)) {
-		pLoc->Release();
-		CoUninitialize();
-		return false;                // Program has failed.
-	}
-
-	hres = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL, 
-		RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE);
-
-	if (FAILED(hres)) {
-		pSvc->Release();
-		pLoc->Release();
-		CoUninitialize();
-		return false;
-	}
-
-	IEnumWbemClassObject* pEnumerator = NULL;
-	hres = pSvc->ExecQuery(bstr_t("WQL"),
-		bstr_t("select * from Win32_PnPEntity where PNPDeviceID  like '%VID_0483&PID_5760&%' "),
-		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL, &pEnumerator);
-
-	if (FAILED(hres)) {
-		pSvc->Release();
-		pLoc->Release();
-		CoUninitialize();
-		return false;
-	}
-
-	IWbemClassObject *pclsObj = NULL;
-	ULONG uReturn = 0;
-	char * nameStr = NULL;
-	char * pnpStr = NULL;
-
-	string video_pnp;
-	vector<pair<string, string>> cmd_info;
-	const char *video_name = strstr(uvc_port_name.c_str(), "__");
-	if (video_name) {
-		video_name += 2;
-		while (pEnumerator) {
-			HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1,
-				&pclsObj, &uReturn);
-
-			if (0 == uReturn)
-				break;
-
-			VARIANT vtProp;
-			VARIANT pnpProp;
-
-			hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
-			hr = pclsObj->Get(L"PNPDeviceID", 0, &pnpProp, 0, 0);
-			nameStr = _com_util::ConvertBSTRToString(vtProp.bstrVal);
-			pnpStr = _com_util::ConvertBSTRToString(pnpProp.bstrVal);
-
-			if (strstr(nameStr, "COM") != NULL) {
-				char *p1 = strrchr(pnpStr, '\\');
-				char *p2 = strrchr(p1, '&');
-
-				char * c1 = strrchr(nameStr, '(');
-				char * c2 = strrchr(c1, ')');
-				*c2 = 0; *p2 = 0;
-				pair<string, string> str_pair(c1 + 1, p1);
-				cmd_info.push_back(str_pair);
-			}
-			else {
-				if (strcmp(nameStr, video_name) == 0) {
-					char *start = strrchr(pnpStr, '\\');
-					char *end = strrchr(start, '&');
-					*end = 0;
-					video_pnp = start;
+	for (DWORD i = 0; i < dwGuids; i++) {
+		HDEVINFO hDevInfo = SetupDiGetClassDevs(&pGuids[i], NULL, NULL, DIGCF_PRESENT);
+		if (hDevInfo == INVALID_HANDLE_VALUE)
+			break;
+		for (int index = 0; ; index++) {
+			SP_DEVINFO_DATA devInfo;
+			std::pair<std::string, std::string> p;
+			devInfo.cbSize = sizeof(SP_DEVINFO_DATA);
+			if (!SetupDiEnumDeviceInfo(hDevInfo, index, &devInfo)) { break; }
+			prop_buf[0] = 0;
+			CM_Get_Device_ID(devInfo.DevInst, prop_buf, 1024, 0);
+			if (_tcsstr(prop_buf, vid_pid)) {
+				p.second = prop_buf;
+				HKEY hDeviceKey = SetupDiOpenDevRegKey(hDevInfo, &devInfo, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
+				if (hDeviceKey) {
+					prop_buf[0] = 0;
+					DWORD dw_size = sizeof(prop_buf);
+					DWORD dw_type = 0;
+					if ((RegQueryValueEx(hDeviceKey, _T("PortName"), NULL, &dw_type, (LPBYTE)prop_buf, &dw_size) == ERROR_SUCCESS) && (dw_type == REG_SZ)) {
+						p.first = prop_buf;
+						device_list.push_back(p);
+					}
 				}
 			}
+			//SetupDiGetDeviceRegistryProperty(hDevInfo, &devInfo, SPDRP_FRIENDLYNAME, 0L, (PBYTE)prop_buf, 1024, &n);
+		}
+		SetupDiDestroyDeviceInfoList(hDevInfo);
+	}
+	delete[]pGuids;
 
-			delete[] nameStr;
-			delete[] pnpStr;
+	return true;
+}
 
-			VariantClear(&vtProp);
-			VariantClear(&pnpProp);
-			pclsObj->Release();
+bool CmdInterfaceWin::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_port_name)
+{
+	std::vector<std::pair<std::string, std::string>> device_list;
+	bool ret = GetCmdDevices(device_list);
+
+	const char *video_name = strstr(uvc_port_name.c_str(), "__") + 2;
+	if (ret && device_list.size() > 0) {
+		for (auto dev : device_list) {
+			if (strstr(dev.second.c_str(), video_name)) {
+				cmd_port_name = "\\\\.\\" + dev.first;
+				return true;
+			}
 		}
 	}
 
-	pSvc->Release();
-	pLoc->Release();
-	pEnumerator->Release();
-	CoUninitialize();
-
-	for (auto &str_pair : cmd_info) {
-		if (str_pair.second == video_pnp) {
-			cmd_port_name = "\\\\.\\" + str_pair.first;
-			return true;
-		}
-	}
 	return false;
 }

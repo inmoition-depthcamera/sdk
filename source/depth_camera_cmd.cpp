@@ -123,7 +123,7 @@ int32_t DepthCameraCmdPort::GetUpgradeProgress()
 	return mUpgradeProgress;
 }
 
-int32_t DepthCameraCmdPort::IsUpgradeing()
+int32_t DepthCameraCmdPort::IsUpgrading()
 {
 	return mIsUpgrading;
 }
@@ -190,7 +190,7 @@ bool DepthCameraCmdPort::GetDepthScale(float & scale)
 	char response_buf[1024];
 	char cmd[32];
 	int32_t len = snprintf(cmd, sizeof(cmd), "scale\r\n");
-	int32_t res_len = SendCmdAndWaitResponse(cmd, len, 1000, response_buf, sizeof(response_buf) - 1);
+	int32_t res_len = SendCmdAndWaitResponse(cmd, len, 3000, response_buf, sizeof(response_buf) - 1, "scale");
 	if (res_len > 0) {
 		response_buf[res_len] = 0;
 		char * str = strstr((char*)response_buf, "scale: ");
@@ -205,11 +205,11 @@ bool DepthCameraCmdPort::GetDepthScale(float & scale)
 	return false;
 }
 
-bool DepthCameraCmdPort::Calibration(int32_t distance)
+bool DepthCameraCmdPort::Calibration(int32_t distance, int32_t freq_cnt)
 {
 	char cmd[32];
 
-	for (int i = 1; i <= 2; i++) {
+	for (int i = 1; i <= freq_cnt; i++) {
 		// begin test
 		int32_t len = snprintf(cmd, sizeof(cmd), "cali f%d test\r\n", i);
 		bool ret = SendCmdAndWaitResult(cmd, len, "success ->");
@@ -217,7 +217,7 @@ bool DepthCameraCmdPort::Calibration(int32_t distance)
 			return false;
 
 		// wait for a second
-		this_thread::sleep_for(chrono::seconds(1));
+		this_thread::sleep_for(chrono::seconds(20));
 
 		// set data
 		len = snprintf(cmd, sizeof(cmd), "cali f%d set %d\r\n", i, distance);
@@ -234,14 +234,14 @@ bool DepthCameraCmdPort::GetSystemStatus(string &status_str)
 	char response_buf[2048];
 	char cmd[32];
 	int32_t len = snprintf(cmd, sizeof(cmd), "show\r\n");
-	int32_t res_len = SendCmdAndWaitResponse(cmd, len, 1000, response_buf, sizeof(response_buf) - 1);
+	int32_t res_len = SendCmdAndWaitResponse(cmd, len, 3000, response_buf, sizeof(response_buf) - 1, "show");
 	if (res_len > 0) {
 		response_buf[res_len] = 0;
 		char * str = strstr((char*)response_buf, "show");
 		char * endstr = strstr((char*)response_buf, "\r\nidcs>");
 		if(endstr) *endstr = 0;
 		if (str){
-			status_str = str + len;
+			status_str = str + len - 1;
 			return true;
 		}
 	}
@@ -255,18 +255,22 @@ bool DepthCameraCmdPort::SaveConfig()
 	return SendCmdAndWaitResult(cmd, len, "success ->");
 }
 
+bool DepthCameraCmdPort::CdcVideoControl(bool enable_disable)
+{
+	char cmd[32];
+	int32_t len;
+	if(enable_disable)
+		len = snprintf(cmd, sizeof(cmd), "cdcv on\r\n");
+	else
+		len = snprintf(cmd, sizeof(cmd), "cdcv off\r\n");
+	return SendCmdAndWaitResult(cmd, len, "success ->");
+}
+
 bool DepthCameraCmdPort::SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str, int32_t timeout)
 {
 	char response_buf[1024];
-
-	int32_t res_len = SendCmdAndWaitResponse(cmd, cmd_len, timeout, response_buf, sizeof(response_buf) - 1);
-	if (res_len > 0) {
-		response_buf[1023] = 0;
-		if (strstr(response_buf, result_ok_str) != NULL)
-			return true;
-	}
-
-	return false;
+	int32_t res_len = SendCmdAndWaitResponse(cmd, cmd_len, timeout, response_buf, sizeof(response_buf) - 1, result_ok_str);
+	return res_len > 0 ? true : false;
 }
 
 int32_t DepthCameraCmdPort::Base64Encode(const char *input, size_t input_length, char *out, size_t out_length) {

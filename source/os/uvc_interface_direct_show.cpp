@@ -34,7 +34,7 @@ UvcInterfaceDirectShow::~UvcInterfaceDirectShow()
 	}
 }
 
-bool UvcInterfaceDirectShow::GetUvcCameraList(std::vector<std::string> &camera_list, const char *filter)
+bool UvcInterfaceDirectShow::GetCameraList(std::vector<std::string> &camera_list, const char *filter)
 {
 	ComInit();
 
@@ -155,13 +155,13 @@ bool UvcInterfaceDirectShow::Open(std::string &camera_name)
 	CHECK_HR(stream_conf->GetFormat(&pmt));
 
 	VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER*>(pmt->pbFormat);
-	mUvcWidth = HEADER(pVih)->biWidth;
-	mUvcHeight = HEADER(pVih)->biHeight;
+	mVideoWidth = HEADER(pVih)->biWidth;
+	mVideoHeight = HEADER(pVih)->biHeight;
 
 	pmt->formattype = FORMAT_VideoInfo;
 	pmt->majortype = MEDIATYPE_Video;
 	pmt->subtype = MEDIASUBTYPE_YUY2;
-	pmt->lSampleSize = mUvcWidth * mUvcHeight * 2;
+	pmt->lSampleSize = mVideoWidth * mVideoHeight * 2;
 		
 	CHECK_HR(stream_conf->SetFormat(pmt));
 
@@ -209,7 +209,7 @@ bool UvcInterfaceDirectShow::Open(std::string &camera_name)
 
 	CHECK_HR(mControl->Run());
 
-	mIsOpened = true;
+	mIsVideoOpened = true;
 
 	stream_conf->Release();
 	stream_conf = NULL;
@@ -222,13 +222,13 @@ bool UvcInterfaceDirectShow::Open(std::string &camera_name)
 
 	dest_filter->Release();
 	dest_filter = NULL;
-
-	return true;
+	
+	return DepthVideoInterface::Open(camera_name);
 }
 
 bool UvcInterfaceDirectShow::Close()
 {
-	if (mIsOpened == false)
+	if (mIsVideoOpened == false)
 		return true;
 
 	HRESULT HR = NOERROR;
@@ -252,9 +252,9 @@ bool UvcInterfaceDirectShow::Close()
 	SAFE_CHECK_RELEASE(mCaptureGraph);
 	SAFE_CHECK_RELEASE(mGraph);
 
-	mIsOpened = false;
+	mIsVideoOpened = false;
 
-	return true;
+	return DepthVideoInterface::Close();
 }
 
 HRESULT UvcInterfaceDirectShow::BindDevice(IBaseFilter** gottaFilter, const char * device_name, WCHAR *w_device_name) {
@@ -323,6 +323,12 @@ HRESULT UvcInterfaceDirectShow::BindDevice(IBaseFilter** gottaFilter, const char
 	delete [] string_buf;
 	return done ? hr : VFW_E_NOT_FOUND;
 }
+
+bool UvcInterfaceDirectShow::GetDepthCameraList(vector<string>& camera_list)
+{
+	return GetCameraList(camera_list, "INMOTION");
+}
+
 
 bool UvcInterfaceDirectShow::ComInit()
 {

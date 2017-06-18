@@ -2,23 +2,23 @@
 #ifndef __UVC_INTERFACE_DIRECT_SHOW_H__
 #define __UVC_INTERFACE_DIRECT_SHOW_H__
 
-#include "uvc_interface.h"
+#include "depth_video_interface.h"
 
 #include "dshow.h"
 #include <windows.h>
 
-class UvcInterfaceDirectShow:public UvcInterface
+class UvcInterfaceDirectShow:public DepthVideoInterface
 {
 public:
 	UvcInterfaceDirectShow();
 	~UvcInterfaceDirectShow();
 
-	// Inherited via UvcInterface
-	virtual bool GetUvcCameraList(std::vector<std::string> &camera_list, const char *filter) override;
+	virtual bool GetDepthCameraList(vector<string>& camera_list) override;
 	virtual bool Open(std::string &camera_name) override;
 	virtual bool Close() override;
 
 private:
+	virtual bool GetCameraList(std::vector<std::string> &camera_list, const char *filter) override;
 
 	interface ISampleGrabberCB : public IUnknown
 	{
@@ -94,6 +94,7 @@ private:
 
 	ISampleGrabber * mGrabber;                // Grabs frame
 	GrabberCB * mGrabberCB;
+
 };
 
 #endif

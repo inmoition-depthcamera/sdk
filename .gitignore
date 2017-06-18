@@ -45,3 +45,5 @@ doc/
 obj/
 *.ini
 *.ttf
+.idea
+cmake-build*

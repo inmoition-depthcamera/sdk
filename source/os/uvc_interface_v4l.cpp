@@ -22,7 +22,7 @@ UvcInterfaceV4L::~UvcInterfaceV4L()
 	Close();
 }
 
-bool UvcInterfaceV4L::GetUvcCameraList(std::vector<std::string>& camera_list, const char * filter)
+bool UvcInterfaceV4L::GetCameraList(std::vector<std::string>& camera_list, const char * filter)
 {
 	DIR *dir;
     struct dirent *ptr;
@@ -76,7 +76,7 @@ error:
 
 bool UvcInterfaceV4L::Close()
 {
-	if(mIsOpened == false)
+	if(mIsVideoOpened == false)
 		return true;
 
 	mReadFrameThreadExitFlag = true;
@@ -89,12 +89,12 @@ bool UvcInterfaceV4L::Close()
         mReadFrameThread = NULL;
     }
 
-	if (mIsOpened)
+	if (mIsVideoOpened)
 		StopStream();
 
 	for (int i = 0; i < NB_BUFFER; i++){
         if(mMemBuffers[i])
-            munmap(mMemBuffers[i], mUvcWidth * mUvcHeight * 2);
+            munmap(mMemBuffers[i], mVideoWidth * mVideoHeight * 2);
     }
 
     if(mFd != -1){
@@ -149,8 +149,8 @@ bool UvcInterfaceV4L::InitV4L()
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 	fmt.fmt.pix.field = V4L2_FIELD_ANY;
-	mUvcWidth = fmt.fmt.pix.width;
-	mUvcHeight = fmt.fmt.pix.height;
+	mVideoWidth = fmt.fmt.pix.width;
+	mVideoHeight = fmt.fmt.pix.height;
 	
 	ret = ioctl(mFd, VIDIOC_S_FMT, &fmt);
 	if (ret < 0) {
@@ -209,7 +209,7 @@ int32_t UvcInterfaceV4L::StartStream()
 		fprintf(stderr, "Unable to %s capture: %d.\n", "start", errno);
 		return ret;
 	}
-	mIsOpened = 1;
+	mIsVideoOpened = 1;
 	return 0;
 }
 
@@ -224,13 +224,13 @@ int32_t UvcInterfaceV4L::StopStream()
 		return ret;
 	}
 
-	mIsOpened = false;
+	mIsVideoOpened = false;
 	return 0;
 }
 
 void UvcInterfaceV4L::ReadFrameThreadProc(UvcInterfaceV4L *v4l_if)
 {
-	uint32_t frame_size = v4l_if->mUvcHeight * v4l_if->mUvcWidth * 2;
+	uint32_t frame_size = v4l_if->mVideoHeight * v4l_if->mVideoWidth * 2;
 	struct v4l2_buffer v4l_buf;
 
 	while(v4l_if->mReadFrameThreadExitFlag == false){
@@ -254,4 +254,8 @@ void UvcInterfaceV4L::ReadFrameThreadProc(UvcInterfaceV4L *v4l_if)
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 	}
+}
+
+bool UvcInterfaceV4L::GetDepthCameraList(std::vector <std::string> &camera_list) {
+	return GetCameraList(camera_list, "INMOTION");
 }

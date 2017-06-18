@@ -1,5 +1,5 @@
 
-#include <depth_camera_uvc.h>
+#include <depth_camera_cmd_video.h>
 #include <denoise_filter.h>
 #include <GLFW/glfw3.h>
 #include "model_view.h"
@@ -12,7 +12,7 @@ static bool MouseDownFlag = false, ShowHideFlag = false;
 static double LastMousePosX, LastMousePosY;
 static DenoiseFilter DepthCameraDenoiseFilter;
 static glModelView ModelView;
-static DepthCameraUvcPort *UvcPort;
+static DepthCameraCmdVideo *CmdVideo;
 static float UserScale = 1.0f, MaxRange = 7.5f;
 
 static float Scale = 3.0f;
@@ -122,9 +122,9 @@ static void DrawCallBack(void *cb_param, void *render_param){
 		filter_init = true;
 	}
 	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 8);
-	points_cnt = UvcPort->ToFiltedPointsCloud(filted_phase, df, cloud_points, Scale * UserScale);
+	points_cnt = CmdVideo->ToFiltedPointsCloud(filted_phase, df, cloud_points, Scale * UserScale, 4096, 8);
 #else 
-	points_cnt = UvcPort->ToFiltedPointsCloud(NULL, df, cloud_points, Scale * UserScale);
+	points_cnt = CmdVideo->ToFiltedPointsCloud(NULL, df, cloud_points, Scale * UserScale);
 #endif
 
 	glDisable(GL_LIGHTING);
@@ -149,7 +149,7 @@ static void DrawCallBack(void *cb_param, void *render_param){
 }
 
 // Public functions
-bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float scale, float max_range) {
+bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraCmdVideo *cmd_video, float scale, float max_range) {
 
 	if (PointsCloudWnd) {
 		return false;
@@ -173,7 +173,7 @@ bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float 
 	ModelView.SetDrawCallBack(DrawCallBack, NULL);
 
 	UserScale = scale;
-	UvcPort = uvc;
+	CmdVideo = cmd_video;
 	MaxRange = max_range;
 
 

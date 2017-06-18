@@ -69,7 +69,7 @@ public:
 
 	/// @brief Get Upgrade progress
 	/// @return Return the detail progrss in percent(0~100)
-	int32_t IsUpgradeing();
+	int32_t IsUpgrading();
 
 	/// @brief Set the integration time of camera
 	/// @param value The intgration time of camera in percent(0~100)
@@ -166,8 +166,9 @@ public:
 	/// in the calibration process, can not move the calibration target and camera.
 	///
 	/// @param distance The distance of the center object(center 6*6 rectange). The unit of this parameter is mm.
+	/// @param freq_cnt The Calibration frequence count, 1 -> calibrate freq1, 2 -> calibrate freq1 and freq2
 	/// @return Return ture if successed
-	bool Calibration(int32_t distance);
+	bool Calibration(int32_t distance, int32_t freq_cnt);
 	
 	/// @brief Save modified settings to internal FLASH
 	///
@@ -176,11 +177,21 @@ public:
 	/// all settings will be lost. 
 	/// After setting up the camera, you need to call the SaveConfig function 
 	/// when you need to save the settings
+	///
 	/// @return Return ture if successed
 	bool SaveConfig();
+
+	/// @brief Enable/Disable video stream from cdc port
+	///
+	/// Some low resolution camera support video from cdc.
+	///
+	/// @param enable_disable true -> enable, false -> disable
+	/// @return Return ture if successed
+	bool CdcVideoControl(bool enable_disable);
+
 private:
 
-	bool SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str, int32_t timeout = 1000);
+	bool SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str, int32_t timeout = 3000);
 	static int32_t Base64Encode(const char *input, size_t input_length, char *out, size_t out_length);
 	static uint32_t Crc32(const char *input, int32_t input_len, int32_t offset = 0, uint32_t crc = 0xFFFFFFFF);
 

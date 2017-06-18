@@ -15,10 +15,12 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
 
     file(GLOB_RECURSE SRC_LIST
         "${SRCDIR}/depth_camera_cmd.cpp"
-        "${SRCDIR}/depth_camera_uvc.cpp"
+        "${SRCDIR}/depth_camera_cmd_video.cpp"
         "${SRCDIR}/depth_frame.cpp"
         "${SRCDIR}/filter/*.cpp"
         "${SRCDIR}/os/cmd_interface.cpp"
+        "${SRCDIR}/os/depth_video_interface.cpp"
+        "${SRCDIR}/os/video_interface.cpp"
         "${SRCDIR}/os/cmd_interface_win.cpp"
         "${SRCDIR}/os/uvc_interface.cpp"        
         "${SRCDIR}/os/uvc_interface_direct_show.cpp")
@@ -35,10 +37,12 @@ ELSE()
 	SET(CMAKE_CXX_FLAGS "-Wall -O2 -Werror ${CMAKE_CXX_FLAGS}")
     file(GLOB_RECURSE SRC_LIST
         "${SRCDIR}/depth_camera_cmd.cpp"
-        "${SRCDIR}/depth_camera_uvc.cpp"
+        "${SRCDIR}/depth_camera_cmd_video.cpp"
         "${SRCDIR}/depth_frame.cpp"
         "${SRCDIR}/filter/*.cpp"
         "${SRCDIR}/os/cmd_interface.cpp"
+        "${SRCDIR}/os/depth_video_interface.cpp"
+        "${SRCDIR}/os/video_interface.cpp"
         "${SRCDIR}/os/cmd_interface_linux.cpp"
         "${SRCDIR}/os/uvc_interface.cpp"
         "${SRCDIR}/os/uvc_interface_v4l.cpp")
@@ -58,7 +62,7 @@ ELSE()
         TARGET_LINK_LIBRARIES(${SDK_NAME}_static udev)
     ENDIF()
 
-ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+ENDIF ()
 
 
 
