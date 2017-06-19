@@ -155,6 +155,11 @@ bool DepthCameraCmdVideo::Open(std::string & camera_name)
 	mVideoMode = true;
 	GetUvcRelatedCmdPort(camera_name, com_name);
 	bool ret = DepthCameraCmdPort::Open(com_name);
+	if(ret == false){
+		std::cout << "DepthCameraCmdVideo::Open  DepthCameraCmdPort::Open failed!" << endl;
+		return false;
+	}
+	SendCmd("\r\n", 2);
 	ret = ret && GetSystemStatus(status);
 	if (ret) {
 		std::stringstream ss;
@@ -185,6 +190,8 @@ bool DepthCameraCmdVideo::Open(std::string & camera_name)
 			if(ret)
 				mIsCmdVideoOpened = true;
 		}
+	}else{
+		std::cout << "DepthCameraCmdVideo::Open  GetSystemStatus failed!" << endl;
 	}
 
 	if (!ret)

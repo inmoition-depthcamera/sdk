@@ -51,7 +51,6 @@ int32_t CmdInterface::SendCmdAndWaitResponse(const char * cmd_buf, int32_t cmd_l
 			do {
 				if (mRxEvent.wait_for(lck, std::chrono::milliseconds(timeout)) != std::cv_status::timeout) {
 					int32_t cplen = -1;
-
 					mMutex.lock();
 					if (mResponseBufferLen > 0 && ack_buffer) {
 						cplen = ack_buf_len > mResponseBufferLen ? mResponseBufferLen : ack_buf_len;
@@ -120,18 +119,32 @@ bool CmdInterface::ProcessCmdStr(const char * in_buf, uint32_t rx_buf_len)
 	char *str1 = strstr(mCmdStrProcessBuffer, "idcs>");
 	if (str1 != NULL) {
 		char *str2 = str1 + 5;
-		while (str1 > mCmdStrProcessBuffer && *str1 != '\n')
+		while ((str1 > mCmdStrProcessBuffer) && (*str1 != '\n'))
 			str1--;
+		
+		if(str1 == mCmdStrProcessBuffer){
+			mCmdStringProcessOffset = 0;
+			return false;
+		}
+
 		mMutex.lock();
 		mResponseBufferLen = str1 - mCmdStrProcessBuffer + 1;
 		memcpy(mResponseBuffer, mCmdStrProcessBuffer, mResponseBufferLen);
+		mResponseBuffer[mResponseBufferLen] = 0;
 		mMutex.unlock();
 
 		// copy reset to head
 		mCmdStringProcessOffset = mCmdStringProcessOffset - (str2 - mCmdStrProcessBuffer);
-		if (mCmdStringProcessOffset)
-			memcpy(mCmdStrProcessBuffer, str2, mCmdStringProcessOffset);
-		// notify ack event
+		if (mCmdStringProcessOffset){
+			for(int i = 0 ; i < mCmdStringProcessOffset ; i ++){
+				mCmdStrProcessBuffer[i] = str2[i];
+			}
+			//memcpy(mCmdStrProcessBuffer, str2, mCmdStringProcessOffset);
+
+			// notify ack event
+			mCmdStrProcessBuffer[mCmdStringProcessOffset] = 0;
+		}
+			
 		mRxEvent.notify_all();
 	}
 	else if (mCmdStringProcessOffset >= MAX_ACK_BUF_LEN) {

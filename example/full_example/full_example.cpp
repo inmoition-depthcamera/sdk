@@ -67,7 +67,7 @@ static void DrawDepthFrame(DepthFrame *df, DepthCameraUvcPort *uvc) {
 
 	// Draw Pixels
 	glViewport(x, y, w, h);
-	df->ToGray24(rgb_buf, frame_size * 3 * 4);
+	df->ToRgb24(rgb_buf, frame_size * 3 * 4);
 	glRasterPos2f(-1, 1);
 	glPixelZoom((float)w / (float)(df->w * 2), -(float)(h) / (float)(df->h * 2));
 	glDrawPixels(df->w * 2, df->h * 2, GL_RGB, GL_UNSIGNED_BYTE, rgb_buf);

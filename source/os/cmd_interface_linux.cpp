@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <string.h>
 #include <memory.h>
+#include <iostream>
 
 #ifdef USE_UDEV
 	#include <libudev.h>
@@ -28,6 +29,7 @@ bool CmdInterfaceLinux::Open(string & port_name)
 	int flags = (O_RDWR | O_NOCTTY | O_NONBLOCK);
 	mComHandle = open(port_name.c_str(), flags);
 	if (-1 == mComHandle) {
+		std::cout << "CmdInterfaceLinux::Open open error!" << endl;
 		return false;
 	}
 
@@ -35,6 +37,7 @@ bool CmdInterfaceLinux::Open(string & port_name)
 	struct termios options;
 	if (-1 == tcgetattr(mComHandle, &options)) {
 		Close();
+		std::cout << "CmdInterfaceLinux::Open tcgetattr error!" << endl;
 		return false;
 	}
 
@@ -49,6 +52,7 @@ bool CmdInterfaceLinux::Open(string & port_name)
     options.c_cc[VTIME] = 0;
 
     if(tcsetattr(mComHandle, TCSANOW, &options) < 0){
+		std::cout << "CmdInterfaceLinux::Open tcsetattr error!" << endl;
         Close();
         return false;
     }
@@ -81,6 +85,8 @@ bool CmdInterfaceLinux::Close()
 	}
 
 	mIsCmdOpened = false;
+	mResponseBufferLen = 0;
+	mCmdStringProcessOffset = 0;
 
 	return true;
 }
