@@ -210,12 +210,6 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 				cmd->SwitchMirror();
 			}ImGui::SameLine(); ShowHelpMarker("Mirror the output by 180 degree");
 			ImGui::Separator();
-			if (ImGui::Button("Calibration Clear")) {
-				if (cmd->Calibration(cali_distance, 1))
-					cout << "Calibration finished!" << endl;
-				else
-					cout << "Calibration failed!" << endl;
-			}
 			ImGui::InputInt("Calibration Distance(mm)", &cali_distance, 10, 1000); ImGui::SameLine();
 			ShowHelpMarker("Calibration the phase offset use given distance at center 6*6 rect.");
 			ImGui::SameLine(); if (ImGui::Button("Calibration")) {
