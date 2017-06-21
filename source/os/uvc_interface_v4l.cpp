@@ -66,7 +66,7 @@ bool UvcInterfaceV4L::Open(std::string & camera_name)
 
 	mReadFrameThreadExitFlag = false;
 	mReadFrameThread = new std::thread(ReadFrameThreadProc, this);
-	return true;
+	return DepthVideoInterface::Open(camera_name);
 
 error:
 	close(mFd);
