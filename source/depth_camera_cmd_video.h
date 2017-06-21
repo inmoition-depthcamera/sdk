@@ -19,13 +19,14 @@ public:
 	virtual bool Close() override;
 	bool IsOpened() { return mIsCmdVideoOpened; }
 	bool VideoControl(bool start_stop);
+	bool IsVideoOpened() { return mIsVideoOpened; }
 
 private:
 	virtual bool GetCameraList(std::vector<std::string>& camera_list, const char * filter) override;
 	
 	static void OnNewCmdDataCallBack(const uint8_t*, int32_t, void *);
 
-	std::atomic<bool> mIsCmdVideoOpened;
+	std::atomic<bool> mIsCmdVideoOpened, mIsVideoOpened;
 
 
 	bool mHadFindHeader;

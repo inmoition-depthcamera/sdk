@@ -124,16 +124,19 @@ public:
 	///
 	/// This function return the status information of current depth camera.
 	/// The output of this function is like following:
-	///	    Video Frame Rate:  33.3 FPS
-	///	    Integration Time : 59 %
-	///	    Illumination:      255
-	///	    Center(6 * 6) Value: Phase = 536974412, Amplitude = 536974420
-	///	    Frequence(MHz) : Freq1 = 40.000, Freq2 = 60.000,
-	///	    VCO_Freq1 = 480.000, VCO_Freq2 = 360.000
-	///	    Others:   Max Distance = 7.50 m, dealiased_ph_mask = 2,
-	///	    		  Max Avilable Phase Value = 3072,
-	///	    	      GCD = 20000000, ma = 2, mb = 3,
-	///
+	///	    Product: INMOTION IDC8060R-7C0F80E7
+	///     Device ID : 00007C0F80E7
+	///	    Firmware Version : 2.2.1
+	///	    Video Channel : cdc
+	///	    Video Width : 160
+	///	    Video Height : 60
+	///	    FPS : 32.0
+	///     FrameRate Set : 40.0
+	/// 	Integration Time(%) : 29
+	/// 	Center Phase Value : 1170
+	/// 	Center Amplitude Value : 37
+	/// 	Freq1(MHz) : 24.000
+	/// 	Max Distance(m) : 6.25
 	/// @param status_str The output result will store into this parameter
 	/// @return Return ture if successed
 	bool GetSystemStatus(string &status_str);
@@ -157,7 +160,6 @@ public:
 	/// @param scale the detph data to distance scale. distance = scale * phase
 	/// @return Return ture if successed
 	bool GetDepthScale(float &scale);
-
 	
 	/// @brief Calibrate the device with a given distance
 	///
@@ -189,11 +191,19 @@ public:
 	/// @return Return ture if successed
 	bool CdcVideoControl(bool enable_disable);
 
-private:
+	/// @brief Reboot depth camera device
+	///
+	/// This operation will make a reset to depth camera device
+	/// and the usb connection will lost after this cmd
+	///
+	/// @return Return ture if successed
+	void SystemReboot();
+
+protected:
 
 	bool SendCmdAndWaitResult(const char * cmd, int32_t cmd_len, const char * result_ok_str, int32_t timeout = 3000);
 	static int32_t Base64Encode(const char *input, size_t input_length, char *out, size_t out_length);
-	static uint32_t Crc32(const char *input, int32_t input_len, int32_t offset = 0, uint32_t crc = 0xFFFFFFFF);
+	static uint32_t Crc32(const uint8_t *p, int len, int32_t offset = 0, uint32_t crc = 0xFFFFFFFF);
 
 	atomic_bool mIsUpgrading, mStopUpgradingFlag;
 	atomic<int32_t> mUpgradeProgress;

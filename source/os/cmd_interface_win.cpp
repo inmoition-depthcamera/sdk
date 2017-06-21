@@ -1,15 +1,10 @@
 #include "cmd_interface_win.h"
 
-#include <comdef.h>
-#include <Wbemidl.h>
-#include <comutil.h>
 #include <cctype>
 #include <algorithm>
 #include <SetupAPI.h>
 #include <Cfgmgr32.h>
 #include "tchar.h"
-#pragma comment(lib, "comsupp.lib")
-#pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "SetupAPI.lib")
 #pragma comment(lib, "Cfgmgr32.lib")
 #include "iostream"
@@ -89,7 +84,6 @@ bool CmdInterfaceWin::Open(string &port_name)
 	mRxThreadExitFlag = false;
 	mRxThread = new std::thread(mRxThreadProc, this);
 
-	
 	return true;
 }
 
@@ -150,7 +144,7 @@ bool CmdInterfaceWin::WriteToIo(const uint8_t * tx_buf, uint32_t tx_buf_len, uin
 
 bool CmdInterfaceWin::GetCmdDevices(std::vector<std::pair<std::string, std::string>>& device_list)
 {
-	const TCHAR * vid_pid = _T("VID_0483&PID_5740");
+	const TCHAR * vid_pid1 = _T("VID_0483&PID_5760"), *vid_pid2 = _T("VID_0483&PID_5740");
 	DWORD dwGuids = 0;
 	TCHAR prop_buf[1024];
 
@@ -172,7 +166,7 @@ bool CmdInterfaceWin::GetCmdDevices(std::vector<std::pair<std::string, std::stri
 			if (!SetupDiEnumDeviceInfo(hDevInfo, index, &devInfo)) { break; }
 			prop_buf[0] = 0;
 			CM_Get_Device_ID(devInfo.DevInst, prop_buf, 1024, 0);
-			if (_tcsstr(prop_buf, vid_pid)) {
+			if (_tcsstr(prop_buf, vid_pid1) || _tcsstr(prop_buf, vid_pid2)) {
 				p.second = prop_buf;
 				HKEY hDeviceKey = SetupDiOpenDevRegKey(hDevInfo, &devInfo, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
 				if (hDeviceKey) {
@@ -185,7 +179,6 @@ bool CmdInterfaceWin::GetCmdDevices(std::vector<std::pair<std::string, std::stri
 					}
 				}
 			}
-			//SetupDiGetDeviceRegistryProperty(hDevInfo, &devInfo, SPDRP_FRIENDLYNAME, 0L, (PBYTE)prop_buf, 1024, &n);
 		}
 		SetupDiDestroyDeviceInfoList(hDevInfo);
 	}
@@ -198,11 +191,25 @@ bool CmdInterfaceWin::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_
 {
 	std::vector<std::pair<std::string, std::string>> device_list;
 	bool ret = GetCmdDevices(device_list);
+	char video_id[32];
+	const char *id_ptr_end, *id_ptr = strstr(uvc_port_name.c_str(), "vid_");
+	while (*id_ptr && *id_ptr != '#') id_ptr++;
+	id_ptr++;
 
-	const char *video_name = strstr(uvc_port_name.c_str(), "__") + 2;
+	if (strlen(id_ptr) < 5)
+		return false;
+
+	id_ptr_end = id_ptr + 4;
+	while (*id_ptr_end && *id_ptr_end != '&') id_ptr_end++;
+	for (int i = 0; i < id_ptr_end - id_ptr; i++)
+		video_id[i] = tolower(id_ptr[i]); // to lower case
+	video_id[id_ptr_end - id_ptr] = 0;
+
 	if (ret && device_list.size() > 0) {
 		for (auto dev : device_list) {
-			if (strstr(dev.second.c_str(), video_name)) {
+			for (uint32_t i = 0; i < dev.second.length(); i++)
+				dev.second[i] = tolower(dev.second[i]);
+			if (strstr(dev.second.c_str(), video_id)) {
 				cmd_port_name = "\\\\.\\" + dev.first;
 				return true;
 			}
