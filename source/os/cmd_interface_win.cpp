@@ -192,8 +192,16 @@ bool CmdInterfaceWin::GetUvcRelatedCmdPort(string & uvc_port_name, string & cmd_
 	std::vector<std::pair<std::string, std::string>> device_list;
 	bool ret = GetCmdDevices(device_list);
 	char video_id[32];
-	const char *id_ptr_end, *id_ptr = strstr(uvc_port_name.c_str(), "vid_");
-	while (*id_ptr && *id_ptr != '#') id_ptr++;
+	string uvc_name = uvc_port_name;
+
+	for (uint32_t i = 0; i < uvc_name.length(); i++)
+		uvc_name[i] = tolower(uvc_name[i]);
+
+	const char *id_ptr_end, *id_ptr = strstr(uvc_name.c_str(), "vid_");
+	if (id_ptr == NULL)
+		return false;
+
+	while (*id_ptr && *id_ptr != '#' &&  *id_ptr != '\\') id_ptr++;
 	id_ptr++;
 
 	if (strlen(id_ptr) < 5)

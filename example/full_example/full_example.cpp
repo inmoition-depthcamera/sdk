@@ -175,7 +175,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 		static int32_t mirror = 0;
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
-		static string fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
+		static string mcu_fw_version = "", opt_fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
 		static char customer_cmd[1024];
 		static bool cmd_sent_flag = false;
 		ImVec2 wnd_size = ImVec2(520, 0);
@@ -239,9 +239,9 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			}ImGui::SameLine();
 			ShowHelpMarker("Press ENTER to Send custom command to camera");
 
-			const char *string_keys[] = { "Device ID", "Firmware Version", "Center Phase Value", "Center Amplitude Value",
+			const char *string_keys[] = { "Device ID", "Mcu Firmware Version", "Opt Firmware Version", "Center Phase Value", "Center Amplitude Value",
 				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)" };
-			static string *string_values[] = { &devcie_id , &fw_version, &center_phase_value, &center_amplitude_value,
+			static string *string_values[] = { &devcie_id , &mcu_fw_version, &opt_fw_version, &center_phase_value, &center_amplitude_value,
 				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 };
 
 			if (ImGui::CollapsingHeader("Camera Status")) {
@@ -457,7 +457,7 @@ static void OnRxCmdData(const uint8_t * data, int32_t len, void *param) {
 	// Yallow output mark text as output from camera
 	cout << "\033[;33m" << strbuf << "\033[0m" << endl;
 #else
-	cout << strbuf << endl;
+	cout << strbuf ;
 #endif
 }
 

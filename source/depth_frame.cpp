@@ -157,7 +157,7 @@ bool DepthFrame::ToRgb24(uint8_t * rgb24_buf, int32_t rgb24_buf_size)
 		}
 
 		for (int j = 0; j < w; j++) {
-			uint16_t v = (*amplitude_ptr++);
+			uint16_t v = (*amplitude_ptr++) >> 2;
 			if (v > 255) v = 255;
 			*out++ = (uint8_t)v;
 			*out++ = (uint8_t)v;

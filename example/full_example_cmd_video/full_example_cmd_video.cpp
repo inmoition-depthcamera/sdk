@@ -411,10 +411,15 @@ static void DrawMainWindow(DepthCameraCmdVideo * cmd_video, DepthFrame *df) {
 		}
 		
 		ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
-		if(cur_cnt > 1024 * 1024)
-			ImGui::Text("Rx: %.2fM(%.2fk/s)", cur_cnt / (1024.0f * 1024.0f), speed);
-		else
-			ImGui::Text("Rx: %.2fK(%.2fk/s)", cur_cnt / (1024.0f), speed);
+
+		float fcnt = cur_cnt > 1024 * 1024 ? cur_cnt / (1024.0f*1024.0f) : cur_cnt / (1024.0f);
+		const char *fcnt_unit = cur_cnt > 1024 * 1024 ? "M" : "K";
+		fcnt = cur_cnt > (1024 * 1024 * 1024) ? cur_cnt / (1024 * 1024 * 1024.0f) : fcnt;
+		fcnt_unit = cur_cnt > (1024 * 1024 * 1024) ? "G" : fcnt_unit;
+		float fspeed = speed > 1024 ? speed / 1024.0f : speed;
+		const char *fspeed_unit = speed > 1024 ? "M/s" : "K/s";
+
+		ImGui::Text("Rx: %.2f%s(%.2f%s)", fcnt, fcnt_unit, fspeed, fspeed_unit);
 		ImGui::Separator();
 		if (df) {
 			#define FILETER_SIZE 16
@@ -523,7 +528,7 @@ int main(int argc, char **argv)
 	
 	while (!glfwWindowShouldClose(MainWnd))
 	{
-		glfwWaitEventsTimeout(0.1);
+		glfwWaitEventsTimeout(0.07);
 		
 		// Main Window
 		if (cmd_video.IsVideoOpened()) {
