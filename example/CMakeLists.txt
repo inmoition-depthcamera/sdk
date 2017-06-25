@@ -7,7 +7,7 @@ ADD_EXECUTABLE(depth_frame_grabber ${SE_SRCDIR}/depth_frame_grabber.cpp)
 TARGET_LINK_LIBRARIES(depth_frame_grabber idc)
 
 if (UNIX)
-SET(CMAKE_CXX_FLAGS "-Wall -Werror ${CMAKE_CXX_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 TARGET_LINK_LIBRARIES(depth_frame_grabber pthread)
 endif()
 
@@ -26,7 +26,7 @@ ADD_EXECUTABLE(full_example ${FE_SRC_LIST})
 TARGET_LINK_LIBRARIES(full_example idc glfw ${OPENGL_gl_LIBRARY} )
 
 if (UNIX)
-SET(CMAKE_CXX_FLAGS "-Wall -Werror ${CMAKE_CXX_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 TARGET_LINK_LIBRARIES(full_example pthread)
 endif()
 
@@ -37,7 +37,7 @@ ADD_EXECUTABLE(depth_frame_grabber_cmd_video ${SE_SRCDIR}/depth_frame_grabber_cm
 TARGET_LINK_LIBRARIES(depth_frame_grabber_cmd_video idc)
 
 if (UNIX)
-SET(CMAKE_CXX_FLAGS "-Wall -Werror ${CMAKE_CXX_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 TARGET_LINK_LIBRARIES(depth_frame_grabber_cmd_video pthread)
 endif()
 
@@ -55,7 +55,7 @@ ADD_EXECUTABLE(full_example_cmd_video ${FE_SRC_LIST})
 TARGET_LINK_LIBRARIES(full_example_cmd_video idc glfw ${OPENGL_gl_LIBRARY} )
 
 if (UNIX)
-SET(CMAKE_CXX_FLAGS "-Wall -Werror ${CMAKE_CXX_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 TARGET_LINK_LIBRARIES(full_example_cmd_video pthread)
 endif()
 

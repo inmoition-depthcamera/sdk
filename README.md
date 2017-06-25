@@ -56,10 +56,11 @@ make
 - Notes：
 > The compilation toolchain needs to support `c++ 11`
 
-> The camera has two nodes in /dev which are: /dev/ttyACMx and /dev/videox. Make sure your user has right to access those devices before run the example or sdk. Use following instruction to get rights:
+> **The camera has two nodes in /dev which are: /dev/ttyACMx and /dev/videox. Make sure your user has right to access those devices before run the example or sdk. Use following instruction to get rights:**
 ````
 sudo usermod -a -G video,dialout $(whoami)
 ````
+> **In Ubuntu 16.04 (Tested in ubuntu 16.04, maybe also happen in other distributions), after plug in the usb cable of depth camera, the system will open the cmd device automatically, and send some AT commands to the depth device, the device will ignore these AT commands and will close connection after about 5 seconds. User should use this sdk, after this system operation.**
 
 
 ## Usage

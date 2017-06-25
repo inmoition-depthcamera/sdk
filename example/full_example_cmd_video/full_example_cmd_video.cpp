@@ -489,10 +489,10 @@ static void OnRxCmdData(const uint8_t * data, int32_t len, void *param) {
 #endif
 }
 
-static void OnNewFrame(const DepthFrame *df, void* param) {
+//static void OnNewFrame(const DepthFrame *df, void* param) {
 	// notify new frame event to main thread
-	glfwPostEmptyEvent();
-}
+//	glfwPostEmptyEvent();
+//}
 
 int main(int argc, char **argv)
 {
@@ -514,7 +514,7 @@ int main(int argc, char **argv)
 	MainWnd = glfwCreateWindow((int)(w * 2), (int)(h * 2) + MainMenuHeight, "Inmotion Depth Camera Full Example Using CmdVideoPort" , NULL, NULL);
 	
 	cmd_video.SetRxDataCallBack(OnRxCmdData, &cmd_video);
-	cmd_video.SetDepthFrameCallback(OnNewFrame, &cmd_video);
+	//cmd_video.SetDepthFrameCallback(OnNewFrame, &cmd_video);
 
 	if (!MainWnd){
 		glfwTerminate();
@@ -528,7 +528,8 @@ int main(int argc, char **argv)
 	
 	while (!glfwWindowShouldClose(MainWnd))
 	{
-		glfwWaitEventsTimeout(0.07);
+		this_thread::sleep_for(chrono::milliseconds(1));
+		glfwPollEvents();
 		
 		// Main Window
 		if (cmd_video.IsVideoOpened()) {

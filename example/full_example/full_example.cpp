@@ -157,7 +157,29 @@ static void DrawFirmwareUpgradeWindow(DepthCameraCmdPort *cmd, DepthCameraUvcPor
 			}ImGui::SameLine();
 			ShowHelpMarker("Mcu firmware will reload on next boot time.\nUpgrade progress will stop current video stream, and reopen after finished."); ImGui::SameLine();
 			ImGui::Text("%s", info_msg);
-			
+			ImGui::SameLine();
+			if (!cmd->IsUpgrading()) {
+				if (ImGui::Button("Reboot")) {
+					ImGui::OpenPopup("Reboot?");
+				}ImGui::SameLine();
+				ShowHelpMarker("Reboot the depth camera");
+				if (ImGui::BeginPopupModal("Reboot?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					ImGui::Text("Reboot will lost usb connection, you nead to reopen the device!");
+					ImGui::Separator();
+					ImGui::Text("Are your sure to reboot device?");
+					ImGui::SameLine();
+					if (ImGui::Button("Yes", ImVec2(100, 0))) {
+						uvc->Close();
+						cmd->SystemReboot();
+						cmd->Close();
+						this_thread::sleep_for(chrono::seconds(2));
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("No", ImVec2(100, 0))) { ImGui::CloseCurrentPopup(); }
+					ImGui::EndPopup();
+				}
+			}
 		}
 		ImGui::End();
 	}	
@@ -461,6 +483,12 @@ static void OnRxCmdData(const uint8_t * data, int32_t len, void *param) {
 #endif
 }
 
+//static void OnNewFrame(const DepthFrame *df, void* param) {
+	// notify new frame event to main thread
+//	glfwPostEmptyEvent();
+//}
+
+
 int main(int argc, char **argv)
 {
 	DepthCameraCmdPort cmd_port;
@@ -482,6 +510,7 @@ int main(int argc, char **argv)
 	MainWnd = glfwCreateWindow((int)(w * 2), (int)(h * 2) + MainMenuHeight, "Inmotion Depth Camera Full Example" , NULL, NULL);
 	
 	cmd_port.SetRxDataCallBack(OnRxCmdData, &cmd_port);
+	//uvc_port.SetDepthFrameCallback(OnNewFrame, &uvc_port);
 
 	if (!MainWnd){
 		glfwTerminate();
@@ -495,6 +524,7 @@ int main(int argc, char **argv)
 	
 	while (!glfwWindowShouldClose(MainWnd))
 	{
+		this_thread::sleep_for(chrono::milliseconds(1));
 		glfwPollEvents();
 		
 		// Main Window
