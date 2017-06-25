@@ -5,6 +5,8 @@
 #include "depth_camera_cmd.h"
 #include "depth_video_interface.h"
 
+#define IDC_CMD_VIDEO_VERSION ((2 << 24) | (3 << 16) | 18) // 2.3.18
+
 class DepthCameraCmdVideo: public DepthCameraCmdPort, public DepthVideoInterface
 {
 public:
