@@ -195,7 +195,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 		static int32_t mirror = 0;
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
-		static string fw_version = "", product = "", devcie_id = "", set_fps = "";
+		static string mcu_fw_version = "", product = "", devcie_id = "", set_fps = "";
 		static string current_fps = "", max_distance = "0.0", max_phase = "3072";
 		static char customer_cmd[1024];
 		static bool cmd_sent_flag = false;
@@ -260,9 +260,9 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			}ImGui::SameLine();
 			ShowHelpMarker("Press ENTER to Send custom command to camera");
 
-			const char *string_keys[] = { "Product", "Device ID", "Firmware Version", "Center Phase Value", "Center Amplitude Value",
+			const char *string_keys[] = { "Product", "Device ID", "Mcu Firmware Version", "Center Phase Value", "Center Amplitude Value",
 				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)", "FrameRate Set"};
-			static string *string_values[] = { &product, &devcie_id , &fw_version, &center_phase_value, &center_amplitude_value,
+			static string *string_values[] = { &product, &devcie_id , &mcu_fw_version, &center_phase_value, &center_amplitude_value,
 				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2, &set_fps };
 
 			if (ImGui::CollapsingHeader("Camera Status")) {
