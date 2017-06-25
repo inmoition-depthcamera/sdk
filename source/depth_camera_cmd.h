@@ -21,8 +21,6 @@
 
 using namespace std;
 
-#define IDC_CMD_VERSION ((2 << 24) | (3 << 16) | 18) // 2.3.18
-
 #ifdef WIN32
 	#include "os/cmd_interface_win.h"
 	#define CMD_INTERFACE_DRIVER CmdInterfaceWin
