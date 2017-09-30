@@ -75,7 +75,7 @@ bool DepthVideoInterface::Open(std::string &camera_name)
 		mHFocal = mWFocal = 3.6f / 0.015f;  // Focal Length 3.6mm / pixel size 0.015mm
 	}
 	else if (camera_name.find("IDC3224L") != string::npos) {
-		mHFocal = mWFocal = 3.6f / 0.015f;  // Focal Length 3.6mm / pixel size 0.015mm
+		mHFocal = mWFocal = 3.3f / 0.015f;  // Focal Length 3.3mm / pixel size 0.015mm
 	}
 	else {
 		mHFocal = mWFocal = 247.0f;

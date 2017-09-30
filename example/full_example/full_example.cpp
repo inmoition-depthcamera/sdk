@@ -10,6 +10,7 @@
 
 #include <VeraMono_font.h>
 #include <sstream>
+#include <fstream>  
 
 using namespace std;
 using namespace chrono;
@@ -21,10 +22,14 @@ GLFWwindow* MainWnd;
 
 bool ShowPointsCloudFlag = false, ShowStaticsFlag = false;
 bool ShowFirmareUpgradeFlag = false, ShowConfigFlag = false;
+int32_t SavePointsCount = 0, SavePointsAvgCountSize = 0;
+
 
 float DepthScale = 7.5f / 3072, MaxRange = 7.5f;
 int32_t MainMenuHeight = 20;
 string CurrentUvcName;
+
+
 
 bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float scale, float max_range);
 void UpdatePointsCloudWindow(bool *show_hide, DepthFrame *df);
@@ -194,7 +199,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 	if (ShowConfigFlag) {
 		static int32_t hdr_ratio = 0, cali_distance = 1000, integration_time = 40;
 		static int32_t extern_illum_power = 0, internal_illum_power = 0, fps = 30;
-		static int32_t mirror = 0;
+		static int32_t mirror = 0, save_avg = 8;
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
 		static string mcu_fw_version = "", opt_fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
@@ -240,6 +245,17 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 				else
 					cout << "Calibration failed!" << endl;
 			}
+			ImGui::Separator();
+			sprintf(customer_cmd, "Save Frame(%d)", SavePointsCount);
+			ImGui::InputInt(customer_cmd, &save_avg, 1, 1000); ImGui::SameLine();
+			ShowHelpMarker("Save frame use given average frame.");
+			ImGui::SameLine(); if (ImGui::Button("Save")) {
+				if (save_avg > 0) {
+					SavePointsAvgCountSize = save_avg;
+					SavePointsCount = save_avg;
+				}
+			}
+
 			ImGui::PopItemWidth();
 
 			ImGui::Separator();
@@ -247,6 +263,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 				ImGui::SetKeyboardFocusHere();
 				cmd_sent_flag = false;
 			}				
+			customer_cmd[0] = 0;
 			if (ImGui::InputText("Custom Command", customer_cmd, IM_ARRAYSIZE(customer_cmd) - 2,
 				ImGuiInputTextFlags_EnterReturnsTrue)) {
 				int32_t len = strlen(customer_cmd);
@@ -356,8 +373,12 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 							if (cmd->GetUvcRelatedCmdPort(full_name, cmd_port_name)) {
 								bool ret = true;
 								// open cmd port first
-								if(!open_video_only)
+								if (!open_video_only) {
 									ret = cmd->Open(cmd_port_name);
+									if (ret) {
+										cout << "Open Cmd Port successed" << endl;
+									}
+								}
 								if (ret && !open_cmd_only) {
 									if (uvc->Open(full_name)) {
 										cout << "Open Uvc port successed" << endl;
@@ -489,12 +510,17 @@ static void OnRxCmdData(const uint8_t * data, int32_t len, void *param) {
 //}
 
 
+
 int main(int argc, char **argv)
 {
 	DepthCameraCmdPort cmd_port;
 	DepthCameraUvcPort uvc_port;
 	int32_t w = 320, h = 240;
 	DepthFrame *df = NULL;
+	int32_t *avg_phase = NULL;
+	int32_t *avg_amplitude = NULL;
+	int32_t *avg_ambient = NULL;
+
 
 	// Initialize the glfw library
 	if (!glfwInit())
@@ -530,7 +556,55 @@ int main(int argc, char **argv)
 		// Main Window
 		if (uvc_port.IsOpened()) {
 			df = df ? df : new DepthFrame(uvc_port.GetWidth(), uvc_port.GetHeight());
+
 			if (uvc_port.GetDepthFrame(df)){
+
+				if (SavePointsCount > 0) {
+					int32_t size = df->w * df->h;
+					if (avg_phase == NULL) {
+						avg_phase = new int32_t[size];
+						avg_amplitude = new int32_t[size];
+						avg_ambient = new int32_t[size];
+					}
+
+					if (SavePointsCount == SavePointsAvgCountSize) {
+						memset(avg_phase, 0, size * sizeof(int32_t));
+						memset(avg_amplitude, 0, size * sizeof(int32_t));
+						memset(avg_ambient, 0, size * sizeof(int32_t));
+					}
+
+					for (int i = 0; i < size; i++) {
+						avg_phase[i] += df->phase[i];
+						avg_amplitude[i] += df->amplitude[i];
+						avg_ambient[i] += df->ambient[i];
+					}
+
+					SavePointsCount--;
+					
+					if (SavePointsCount == 0 && SavePointsAvgCountSize > 0) {
+						// last avg frame
+						for (int i = 0; i < size; i++) {
+							avg_phase[i] /= SavePointsAvgCountSize;
+							avg_amplitude[i] /= SavePointsAvgCountSize;
+							avg_ambient[i] /= SavePointsAvgCountSize;
+						}
+						const char *files[] = {"phase.csv", "amplitude.csv", "ambient.csv", "distance.csv"};
+						const int *datas[] = { avg_phase , avg_amplitude, avg_ambient, avg_phase};
+						const float factor[] = {1, 1, 1, DepthScale};
+						for (int k = 0; k < 4; k++) {
+							ofstream ofs(files[k]);
+							if (ofs) {
+								for (int i = 0; i < df->h; i++) {
+									for (int j = 0; j < df->w; j++) {
+										ofs << datas[k][i * df->w + j] * factor[k] << ",";
+									}
+									ofs << endl;
+								}
+							}
+							ofs.close();
+						}
+					}
+				}
 
 				// PointsCloudWindow
 				UpdatePointsCloudWindow(&ShowPointsCloudFlag, df);
