@@ -11,6 +11,8 @@
 #include <VeraMono_font.h>
 #include <sstream>
 #include <fstream>  
+#include <ctime>
+#include <iomanip>
 
 using namespace std;
 using namespace chrono;
@@ -434,10 +436,14 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 	}
 	
 	// Draw Info panel
-	ImGui::SetNextWindowPos(ImVec2(10, wh - 80.0f));
-	if (ImGui::Begin("Frame Info", NULL, ImVec2(160, 70), 0.3f,
+	ImGui::SetNextWindowPos(ImVec2(10, wh - 95.0f));
+	if (ImGui::Begin("Frame Info", NULL, ImVec2(160, 80), 0.3f,
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
+		auto t = chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		std::stringstream ss;
+		ss << put_time(localtime(&t), "%Y-%m-%d %H:%M:%S");
+		ImGui::Text(ss.str().c_str(), ImGui::GetIO().Framerate);
 		ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
 		ImGui::Separator();
 		if (df) {

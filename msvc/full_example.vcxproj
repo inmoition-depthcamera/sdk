@@ -28,7 +28,7 @@
     <ProjectGuid>{5EB783F2-DA6E-43B0-908D-368950B2E8ED}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>inmotiondepthcamerasdk</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <ProjectName>full_example</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -68,8 +68,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>C:\Program Files (x86)\GLFW\include;$(SolutionDir)..\example\full_example\imgui;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files (x86)\GLFW\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files %28x86%29\GLFW\include;$(SolutionDir)..\example\full_example\imgui;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\GLFW\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
