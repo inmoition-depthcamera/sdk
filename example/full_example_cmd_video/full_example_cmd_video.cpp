@@ -9,6 +9,8 @@
 
 #include <VeraMono_font.h>
 #include <sstream>
+#include <ctime>
+#include <iomanip>
 
 using namespace std;
 using namespace chrono;
@@ -390,8 +392,8 @@ static void DrawMainWindow(DepthCameraCmdVideo * cmd_video, DepthFrame *df) {
 	}
 	
 	// Draw Info panel
-	ImGui::SetNextWindowPos(ImVec2(10, wh - 100.0f));
-	if (ImGui::Begin("Frame Info", NULL, ImVec2(170, 90), 0.3f,
+	ImGui::SetNextWindowPos(ImVec2(10, wh - 110.0f));
+	if (ImGui::Begin("Frame Info", NULL, ImVec2(170, 100), 0.3f,
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
 		static int32_t dly_cnt = 0;
@@ -409,7 +411,10 @@ static void DrawMainWindow(DepthCameraCmdVideo * cmd_video, DepthFrame *df) {
 			last_time = system_clock::now();
 			dly_cnt = 0;
 		}
-		
+		auto t = chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		std::stringstream ss;
+		ss << put_time(localtime(&t), "%Y-%m-%d %H:%M:%S");
+		ImGui::Text(ss.str().c_str(), ImGui::GetIO().Framerate);
 		ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
 
 		float fcnt = cur_cnt > 1024 * 1024 ? cur_cnt / (1024.0f*1024.0f) : cur_cnt / (1024.0f);
