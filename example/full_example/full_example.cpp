@@ -202,6 +202,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 		static int32_t hdr_ratio = 0, cali_distance = 1000, integration_time = 40;
 		static int32_t extern_illum_power = 0, internal_illum_power = 0, fps = 30;
 		static int32_t mirror = 0, save_avg = 8;
+		static string sensor_temperature = "", laser_temperature = "";
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
 		static string mcu_fw_version = "", opt_fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
@@ -281,9 +282,10 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			ShowHelpMarker("Press ENTER to Send custom command to camera");
 
 			const char *string_keys[] = { "Device ID", "Mcu Firmware Version", "Opt Firmware Version", "Center Phase Value", "Center Amplitude Value",
-				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)" };
+				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)",
+				"Sensor Temperature", "Laser Driver Temperature" };
 			static string *string_values[] = { &devcie_id , &mcu_fw_version, &opt_fw_version, &center_phase_value, &center_amplitude_value,
-				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 };
+				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 , &sensor_temperature, &laser_temperature };
 
 			if (ImGui::CollapsingHeader("Camera Status")) {
 				wnd_size.y = 0;
@@ -312,7 +314,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 					ss.str(status);
 					string line;
 					const char *int32_keys[] = {"FPS", "Integration Time(%)", "Extern Illumination", 
-						                  "Internal Illumination", "Hdr Ratio", "Mirror"};
+						                  "Internal Illumination", "Hdr Ratio", "Mirror" };
 					static int32_t *int32_values[] = {&fps , &integration_time, &extern_illum_power,
 					                     &internal_illum_power , &hdr_ratio, &mirror};
 					while (getline(ss, line)) {

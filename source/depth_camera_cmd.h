@@ -191,6 +191,19 @@ public:
 	/// @return Return ture if successed
 	bool CdcVideoControl(bool enable_disable);
 
+	/// @brief Set the operation mode of the device
+	///
+	/// Setup operation mode: master(default), or slave.
+	/// On Master mode, fps is controlled by fps cmd.
+	/// On Slave mode, fps is controlled by slave_fps param.
+	/// The slave_fps param range is 1~33 
+	/// This operation is added in/after firmware version: 2.4.1
+	///
+	/// @param mode 0 -> master, 1 -> slave
+	/// @param slave_fps set the fps in slave mode.(master mode will ignore this param)
+	/// @return Return ture if successed
+	bool SetOperationMode(int32_t mode, int32_t slave_fps);
+
 	/// @brief Reboot depth camera device
 	///
 	/// This operation will make a reset to depth camera device

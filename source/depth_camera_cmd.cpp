@@ -302,6 +302,21 @@ bool DepthCameraCmdPort::CdcVideoControl(bool enable_disable)
 	return SendCmdAndWaitResult(cmd, len, "success ->");
 }
 
+bool DepthCameraCmdPort::SetOperationMode(int32_t mode, int32_t slave_fps)
+{
+	char cmd[32];
+	int32_t len;
+	if (mode == 0)
+		len = snprintf(cmd, sizeof(cmd), "mode m\r\n");
+	else {
+		if (slave_fps < 1 || slave_fps > 33)
+			return false;
+		len = snprintf(cmd, sizeof(cmd), "mode s %d\r\n", slave_fps);
+	}
+		
+	return SendCmdAndWaitResult(cmd, len, "success ->");
+}
+
 void DepthCameraCmdPort::SystemReboot()
 {
 	SendCmd("reboot\r\n", 8);
