@@ -31,7 +31,10 @@ float DepthScale = 7.5f / 3072, MaxRange = 7.5f;
 int32_t MainMenuHeight = 20;
 string CurrentUvcName;
 
-
+string TempStrings[3] = { "", "", "" };
+bool TemperatureRefreshFlag = true;
+int32_t CurrentConfidence;
+float CurrentDistance;
 
 bool InitPointsCloudWindow(int32_t w, int32_t h, DepthCameraUvcPort *uvc, float scale, float max_range);
 void UpdatePointsCloudWindow(bool *show_hide, DepthFrame *df);
@@ -202,7 +205,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 		static int32_t hdr_ratio = 0, cali_distance = 1000, integration_time = 40;
 		static int32_t extern_illum_power = 0, internal_illum_power = 0, fps = 30;
 		static int32_t mirror = 0, save_avg = 8;
-		static string sensor_temperature = "", laser_temperature = "";
+		static string sensor_temperature = "", laser_temperature = "", illum_temperature = "";
 		static string freq1 = "", freq2 = "", vco_freq1 = "", vco_freq2 = "";
 		static string center_phase_value = "", center_amplitude_value = "", scale = "";
 		static string mcu_fw_version = "", opt_fw_version = "", devcie_id = "", current_fps = "", max_distance = "0.0", max_phase = "3072";
@@ -283,9 +286,10 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 
 			const char *string_keys[] = { "Device ID", "Mcu Firmware Version", "Opt Firmware Version", "Center Phase Value", "Center Amplitude Value",
 				"FPS", "Max Distance(m)", "Max Avilable Phase Value", "Phase To Distance Scale", "Freq1(MHz)", "Freq2(MHz)", "Freq1Vco(MHz)", "Freq2Vco(MHz)",
-				"Sensor Temperature", "Laser Driver Temperature" };
+				"Sensor Temperature", "Illum Temperature", "Laser Driver Temperature" };
 			static string *string_values[] = { &devcie_id , &mcu_fw_version, &opt_fw_version, &center_phase_value, &center_amplitude_value,
-				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 , &sensor_temperature, &laser_temperature };
+				&current_fps , &max_distance, &max_phase, &scale, &freq1 , &freq2, &vco_freq1, &vco_freq2 , 
+				&sensor_temperature, &illum_temperature, &laser_temperature };
 
 			if (ImGui::CollapsingHeader("Camera Status")) {
 				wnd_size.y = 0;
@@ -307,7 +311,7 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			}
 
 			ImGui::Separator();
-			if (ImGui::Button("Get Values") || (last_show_status == false)) {
+			if (ImGui::Button("Get Values") || (last_show_status == false) || TemperatureRefreshFlag) {
 				string status;
 				if (cmd->GetSystemStatus(status)) {
 					std::stringstream ss;
@@ -334,6 +338,11 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 							}
 						}
 					}
+
+					TempStrings[0] = sensor_temperature;
+					TempStrings[1] = illum_temperature;
+					TempStrings[2] = laser_temperature;
+					TemperatureRefreshFlag = false;
 					MaxRange = std::stof(max_distance);
 				}
 				
@@ -380,7 +389,7 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 								if (!open_video_only) {
 									ret = cmd->Open(cmd_port_name);
 									if (ret) {
-										cout << "Open Cmd Port successed" << endl;
+										cout << "Open Cmd Port successed" << endl;										
 									}
 								}
 								if (ret && !open_cmd_only) {
@@ -458,13 +467,16 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 			phase_sum -= phase_array[index];
 			phase_array[index] = pv;
 			phase_sum += pv;
+			
 			amplitude_sum -= amplitude_array[index];
 			amplitude_array[index] = av;
 			amplitude_sum += av;
 			if (++index == FILETER_SIZE) index = 0;
 
+			CurrentDistance = phase_sum * DepthScale / FILETER_SIZE;
+			CurrentConfidence = amplitude_sum / FILETER_SIZE;
 			ImGui::Text("Phase: %d(%.3fm)\nAmplitude: %d",
-				phase_sum / FILETER_SIZE, phase_sum * DepthScale / FILETER_SIZE, amplitude_sum / FILETER_SIZE);
+				phase_sum / FILETER_SIZE, CurrentDistance, CurrentConfidence);
 		}else
 			ImGui::Text("Phase: N/A\nAmplitude: N/A");
 	}

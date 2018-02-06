@@ -18,17 +18,17 @@ class DenoiseFilter
 {
 public:
 	DenoiseFilter();
-    ~DenoiseFilter();
+	~DenoiseFilter();
 
 	void Init(int w, int h);
 	void Denoise(int w, int h, unsigned short *phase, unsigned short *amplitude, unsigned char *flags,
-				 unsigned short *new_phase_frame, int amplitude_th);
+		unsigned short *new_phase_frame, int amplitude_th, int filter_level = 1);
 
 private:
 	static const int dx1[8];
 	static const int dy1[8];
-	static const int dx2[16];
-	static const int dy2[16];
+	static const int dx2[24];
+	static const int dy2[24];
 	static float Big[25];
 	static float Sma[25];
 	static float Dis2D[25];

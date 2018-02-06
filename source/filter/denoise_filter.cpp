@@ -3,8 +3,8 @@
 
 const int DenoiseFilter::dx1[8] = { -1,-1,-1,0,0,1,1,1 };
 const int DenoiseFilter::dy1[8] = { -1,0,1,-1,1,-1,0,1 };
-const int DenoiseFilter::dx2[16] = { -2,-2,-2,-2,-2,-1,-1,0,0,1,1,2,2,2,2,2 };
-const int DenoiseFilter::dy2[16] = { -2,-1,0,1,2,-2,2,-2,2,-2,2,-2,-1,0,1,2 };
+const int DenoiseFilter::dx2[24] = { -2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2 };
+const int DenoiseFilter::dy2[24] = { -2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2 };
 
 float DenoiseFilter::Big[25] =
 { 0.15f,0.2f,0.15f,0.2f,0.15f,
@@ -60,8 +60,45 @@ void DenoiseFilter::Init(int w, int h)
 }
 
 void DenoiseFilter::Denoise(int w, int h, unsigned short *phase, unsigned short *amplitude, unsigned char *flags,
-							unsigned short *new_phase_frame, int amplitude_th)
+							unsigned short *new_phase_frame, int amplitude_th, int32_t filter_level)
 {
+	int min_filter_dis = 500;
+	int min_filter_num = 3;
+
+	switch (filter_level)
+	{
+	case 1:
+	{
+		min_filter_dis = 500;
+		min_filter_num = 18;
+	}
+	break;
+	case 2:
+	{
+		min_filter_dis = 250;
+		min_filter_num = 13;
+	}
+	break;
+	case 3:
+	{
+		min_filter_dis = 100;
+		min_filter_num = 8;
+	}
+	break;
+	case 4:
+	{
+		min_filter_dis = 60;
+		min_filter_num = 5;
+	}
+	break;
+	default:
+	{
+		min_filter_dis = 500;
+		min_filter_num = 18;
+	}
+	break;
+	}
+
 	Matrix depthMat(h, w, phase);
 	memset(new_phase_frame, 0, (sizeof(unsigned short) * w * h));
 
@@ -129,12 +166,12 @@ void DenoiseFilter::Denoise(int w, int h, unsigned short *phase, unsigned short 
 			for (int k = 0; k < 8; k++)
 			{
 				{
-					if (Center - DepthROI.data[2 + dx1[k]][2 + dy1[k]]>250)
+					if (Center - DepthROI.data[2 + dx1[k]][2 + dy1[k]]>min_filter_dis)
 					{
 						edgeNum++;
 						Relation.data[2 + dx1[k]][2 + dy1[k]] = 0;
 					}
-					else if (Center - DepthROI.data[2 + dx1[k]][2 + dy1[k]] < -250)
+					else if (Center - DepthROI.data[2 + dx1[k]][2 + dy1[k]] < -min_filter_dis)
 					{
 						edgeNum++;
 						Relation.data[2 + dx1[k]][2 + dy1[k]] = 0;
@@ -145,7 +182,7 @@ void DenoiseFilter::Denoise(int w, int h, unsigned short *phase, unsigned short 
 					}
 				}
 			}
-			if ((edgeNum > 1))
+			if ((edgeNum > min_filter_num))
 			{
 				new_phase_frame[Index] = 0;
 				continue;

@@ -14,7 +14,7 @@ static DenoiseFilter DepthCameraDenoiseFilter;
 static glModelView ModelView;
 static DepthCameraUvcPort *UvcPort;
 static float UserScale = 1.0f, MaxRange = 7.5f;
-
+static int32_t FilterLevel = 1;
 static float Scale = 3.0f;
 
 // Windows Events
@@ -90,6 +90,13 @@ static void pc_key_callback(GLFWwindow* window, int key, int scancode, int actio
 			ModelView.SetCameraAngle(0, 0, camera_angles[camera_angle_indexs[2] & 0x03]);
 			camera_angle_indexs[2] ++;
 			break;
+		case GLFW_KEY_S:
+			if (FilterLevel == 4)
+				FilterLevel = 1;
+			else
+				FilterLevel += 1;
+			printf("\n[Points Cloud] Set Filter level to %d\n", FilterLevel);
+			break;
 		}
 	}
 }
@@ -121,7 +128,7 @@ static void DrawCallBack(void *cb_param, void *render_param){
 		DepthCameraDenoiseFilter.Init(df->w, df->h);
 		filter_init = true;
 	}
-	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 8);
+	DepthCameraDenoiseFilter.Denoise(df->w, df->h, df->phase, df->amplitude, df->flags, filted_phase, 8, FilterLevel);
 	points_cnt = UvcPort->ToFiltedPointsCloud(filted_phase, df, cloud_points, Scale * UserScale);
 #else 
 	points_cnt = UvcPort->ToFiltedPointsCloud(NULL, df, cloud_points, Scale * UserScale);
