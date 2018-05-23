@@ -224,10 +224,10 @@ static void DrawConfigWindow(DepthCameraCmdPort *cmd) {
 			ImGui::SameLine(); if (ImGui::Button("Set Internal Illuminate")) {
 				cmd->SetInternalIlluminatePower((uint8_t)internal_illum_power);
 			}
-			ImGui::SliderInt("fps", &fps_set, 10, 60); ImGui::SameLine();
+			ImGui::SliderInt("fps", &fps_set, 1, 33); ImGui::SameLine();
 			ShowHelpMarker("Set the frame rate of the camera.\nSome depth camera will not work, in a wrong frame rate value.High frame rate will reduce the detect range of camera.");
 			ImGui::SameLine(); if (ImGui::Button("Set Frame Rate")) {
-				cmd->SetFrameRate((uint16_t)fps);
+				cmd->SetFrameRate((uint16_t)fps_set);
 			}ImGui::SameLine();
 			if (ImGui::Checkbox("Mirror", (bool *)&mirror)) {
 				cmd->SwitchMirror();
