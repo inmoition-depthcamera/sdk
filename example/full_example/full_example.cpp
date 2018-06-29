@@ -372,14 +372,17 @@ static void DrawMainWindow(DepthCameraCmdPort * cmd, DepthCameraUvcPort *uvc, De
 	// Draw MainMenu
 	if (ImGui::BeginMainMenuBar()) {
 		bool both_opened = cmd->IsOpened() && uvc->IsOpened();
-		bool at_least_one_opend = cmd->IsOpened() | uvc->IsOpened();
+		bool at_least_one_opend = cmd->IsOpened() | uvc->IsOpened();	
 		if (ImGui::BeginMenu("Device")) {
 			if (ImGui::BeginMenu("Open", !at_least_one_opend)) {
 				vector<string> camera_list;
 				uvc->GetDepthCameraList(camera_list);
 				if (camera_list.size() > 0) {
 					for (string full_name : camera_list) {
+#ifdef WIN32
+#else
 						full_name = full_name.substr(0, full_name.find_last_of(":")); // add to fix Linux name match issue.
+#endif
 						string simple_name = full_name.substr(full_name.find_last_of("__") + 1);
 						if (ImGui::MenuItem(simple_name.c_str())) {
 							cout << "Opening " << simple_name << " ..." << endl;
