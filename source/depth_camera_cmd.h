@@ -32,7 +32,7 @@ using namespace std;
 /// @brief INMOTION depth camera cmd interface.
 ///
 /// This class is use to connect depth camera usb cmd
-/// port, and give user many mothed to set the camera's
+/// port, and give user many method to set the camera's
 /// parameters, upgrade the firmware, and calibration
 class DepthCameraCmdPort : public CMD_INTERFACE_DRIVER
 {
@@ -64,16 +64,16 @@ public:
     bool StopUpgrade();
 
 	/// @brief Get Upgrade progress
-	/// @return Return the detail progrss in percent(0~100)
+	/// @return Return the detail progress in percent(0~100)
     int32_t GetUpgradeProgress();
 
 	/// @brief Get Upgrade progress
-	/// @return Return the detail progrss in percent(0~100)
+	/// @return Return the detail progress in percent(0~100)
 	int32_t IsUpgrading();
 
 	/// @brief Set the integration time of camera
 	/// @param value The intgration time of camera in percent(0~100)
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	/// @note High integration time will reduce the noise and 
 	///       increase detect range, but also will increase the 
 	///       system power and increase the blind range.
@@ -81,43 +81,43 @@ public:
 
 	/// @brief Set the extern illuminate power
 	/// @param value The value range is [0~0xFF]
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	/// @note Some depth camera do not have external illumination.
-	///       High illumiate power will reduce the noise and 
+	///       High illuminate power will reduce the noise and 
 	///       increase detect range, but also will increase the 
 	///       system power and increase the blind range.
 	bool SetExternIlluminatePower(uint8_t value);
 
 	/// @brief Set the internal illuminate power
 	/// @param value The value range is [0~0xFF]
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	/// @note Some depth camera do not have external illumination.
-	///       High illumiate power will reduce the noise and 
+	///       High illuminate power will reduce the noise and 
 	///       increase detect range, but also will increase the 
 	///       system power and increase the blind range.
 	bool SetInternalIlluminatePower(uint8_t value);
 
 	/// @brief Set the frame rate of the camera
 	/// @param value The value range depends on camera spec.
-	/// @return Return ture if successed
-	/// @note Some depth camera will not work, in a wrong frame
-	///       rate value. High frame rate will reduce the detect
-	///       range of camera.
+	/// @return Return true if successed
+	/// @note Some depth camera will not work, in a not suitable frame
+	///       rate value, the available fps values are different from different devices. 
+	///       High frame rate will reduce the detect range of camera. 
 	bool SetFrameRate(uint16_t value);
 
 	/// @brief Mirror the output by 180 degree
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool SwitchMirror();
 
 	/// @brief Set the Binning of the depth camera
 	/// @param rows Binning rows
-	/// @param columns Binning colums
-	/// @return Return ture if successed
+	/// @param columns Binning columns
+	/// @return Return true if successed
 	/// @note Some depth camera will not support binning.
 	bool SetBinning(uint8_t rows, uint8_t columns);
 
 	/// @brief Restore depth camera setting to factory setting.
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool RestoreFactorySettings();
 
 	/// @brief Get current status information of depth camera.
@@ -138,7 +138,7 @@ public:
 	/// 	Freq1(MHz) : 24.000
 	/// 	Max Distance(m) : 6.25
 	/// @param status_str The output result will store into this parameter
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool GetSystemStatus(string &status_str);
 
 	/// @brief Set the camera's hdr ratio.
@@ -152,13 +152,13 @@ public:
 	///
 	/// Users will call SetHdrMode method of DepthCameraUvcPort to process hdr frame, or not call to process the hdr frame themself.
 	///
-	/// @param hdr_ratio The retio of normal_intg
-	/// @return Return ture if successed
+	/// @param hdr_ratio The ratio of normal_intg
+	/// @return Return true if successed
 	bool SetHdrRatio(uint8_t hdr_ratio);
 
 	/// @brief Get the depth data to distance scale
 	/// @param scale the detph data to distance scale. distance = scale * phase
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool GetDepthScale(float &scale);
 	
 	/// @brief Calibrate the device with a given distance
@@ -168,8 +168,8 @@ public:
 	/// in the calibration process, can not move the calibration target and camera.
 	///
 	/// @param distance The distance of the center object(center 6*6 rectange). The unit of this parameter is mm.
-	/// @param freq_cnt The Calibration frequence count, 1 -> calibrate freq1, 2 -> calibrate freq1 and freq2
-	/// @return Return ture if successed
+	/// @param freq_cnt The Calibration frequency count, 1 -> calibrate freq1, 2 -> calibrate freq1 and freq2
+	/// @return Return true if successed
 	bool Calibration(int32_t distance, int32_t freq_cnt);
 	
 	/// @brief Save modified settings to internal FLASH
@@ -180,7 +180,7 @@ public:
 	/// After setting up the camera, you need to call the SaveConfig function 
 	/// when you need to save the settings
 	///
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool SaveConfig();
 
 	/// @brief Enable/Disable video stream from cdc port
@@ -188,7 +188,7 @@ public:
 	/// Some low resolution camera support video from cdc.
 	///
 	/// @param enable_disable true -> enable, false -> disable
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool CdcVideoControl(bool enable_disable);
 
 	/// @brief Set the operation mode of the device
@@ -201,7 +201,7 @@ public:
 	///
 	/// @param mode 0 -> master, 1 -> slave
 	/// @param slave_fps set the fps in slave mode.(master mode will ignore this param)
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	bool SetOperationMode(int32_t mode, int32_t slave_fps);
 
 	/// @brief Reboot depth camera device
@@ -209,7 +209,7 @@ public:
 	/// This operation will make a reset to depth camera device
 	/// and the usb connection will lost after this cmd
 	///
-	/// @return Return ture if successed
+	/// @return Return true if successed
 	void SystemReboot();
 
 protected:
